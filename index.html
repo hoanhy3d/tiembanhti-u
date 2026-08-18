@@ -216,7 +216,58 @@
             </div>
         </div>
     </div>
+   <!-- Nút mở Modal thêm món mới (Đặt ở Tab Bếp / Quản lý Menu) -->
+<div class="flex justify-between items-center mb-4">
+  <h2 class="text-lg font-bold text-[#63391F]">Thực Đơn Tiệm Bánh</h2>
+  <button onclick="openMenuModal()" class="px-4 py-2 bg-[#63391F] text-white text-sm font-bold rounded-xl shadow-sm hover:bg-[#4a2a17] transition-all flex items-center gap-1">
+    <span>+</span> Thêm Món Mới
+  </button>
+</div>
 
+<!-- MODAL THÊM / SỬA MÓN ĂN -->
+<div id="menu-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs hidden z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-amber-100">
+    <div class="flex justify-between items-center pb-3 border-b border-amber-100 mb-4">
+      <h3 id="modal-title" class="font-extrabold text-[#63391F] text-lg">Thêm Món Bánh Mới</h3>
+      <button onclick="closeMenuModal()" class="text-gray-400 hover:text-gray-600 font-bold text-xl px-2">&times;</button>
+    </div>
+
+    <form id="menu-form" onsubmit="handleSaveMenuItem(event)" class="space-y-3">
+      <input type="hidden" id="item-id">
+
+      <!-- Tên bánh -->
+      <div>
+        <label class="block text-xs font-bold text-[#63391F] uppercase mb-1">Tên món bánh *</label>
+        <input type="text" id="item-name" required placeholder="Ví dụ: Bánh Bò Thốt Nốt" class="w-full p-2.5 bg-amber-50/50 border border-amber-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#D49A50]">
+      </div>
+
+      <!-- Giá bán -->
+      <div>
+        <label class="block text-xs font-bold text-[#63391F] uppercase mb-1">Giá bán (VNĐ) *</label>
+        <input type="number" id="item-price" required placeholder="85000" class="w-full p-2.5 bg-amber-50/50 border border-amber-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#D49A50]">
+      </div>
+
+      <!-- Link / Tên file Ảnh -->
+      <div>
+        <label class="block text-xs font-bold text-[#63391F] uppercase mb-1">Hình ảnh món bánh</label>
+        <input type="text" id="item-image" placeholder="Nhập tên file (VD: banh-bo.jpg) hoặc Link URL" class="w-full p-2.5 bg-amber-50/50 border border-amber-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#D49A50]">
+        <p class="text-[11px] text-gray-500 mt-1">💡 Điền <code>banh-bo.jpg</code> nếu đã tải file lên GitHub, hoặc dán link ảnh trực tiếp. Để trống sẽ dùng logo mặc định.</p>
+      </div>
+
+      <!-- Mô tả ngắn -->
+      <div>
+        <label class="block text-xs font-bold text-[#63391F] uppercase mb-1">Mô tả món</label>
+        <textarea id="item-desc" rows="2" placeholder="Ổ 20cm thơm dẻo chuẩn vị nhà làm..." class="w-full p-2.5 bg-amber-50/50 border border-amber-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#D49A50]"></textarea>
+      </div>
+
+      <!-- Nút thao tác -->
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="closeMenuModal()" class="w-1/2 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl text-sm hover:bg-gray-200">Hủy</button>
+        <button type="submit" class="w-1/2 py-2.5 bg-[#63391F] text-white font-bold rounded-xl text-sm hover:bg-[#4a2a17] shadow-sm">Lưu Món Bánh</button>
+      </div>
+    </form>
+  </div>
+</div>
     <!-- MAIN APP CONTAINER -->
     <div id="app-container" class="hidden">
         <!-- HEADER -->
