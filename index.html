@@ -1296,6 +1296,64 @@
                 `;
             }).join('');
         }
+<script>
+        // Các đoạn code Javascript hiện có của anh (kết nối Supabase, loadMenu...)
+
+        // ==========================================
+        // DÁN ĐOẠN CODE MỤC 2 VÀO ĐÂY:
+        // ==========================================
+        function openMenuModal(item = null) {
+          const modal = document.getElementById('menu-modal');
+          const title = document.getElementById('modal-title');
+          
+          if (item) {
+            title.innerText = 'Chỉnh Sửa Món Bánh';
+            document.getElementById('item-id').value = item.id || '';
+            document.getElementById('item-name').value = item.name || '';
+            document.getElementById('item-price').value = item.price || '';
+            document.getElementById('item-image').value = item.image_url || '';
+            document.getElementById('item-desc').value = item.description || '';
+          } else {
+            title.innerText = 'Thêm Món Bánh Mới';
+            document.getElementById('menu-form').reset();
+            document.getElementById('item-id').value = '';
+          }
+          
+          modal.classList.remove('hidden');
+        }
+
+        function closeMenuModal() {
+          document.getElementById('menu-modal').classList.add('hidden');
+        }
+
+        async function handleSaveMenuItem(e) {
+          e.preventDefault();
+          
+          const id = document.getElementById('item-id').value;
+          const name = document.getElementById('item-name').value.trim();
+          const price = parseFloat(document.getElementById('item-price').value);
+          const image_url = document.getElementById('item-image').value.trim();
+          const description = document.getElementById('item-desc').value.trim();
+
+          const payload = { name, price, image_url, description };
+
+          try {
+            if (id) {
+              await supabaseClient.from('menu').update(payload).eq('id', id);
+            } else {
+              await supabaseClient.from('menu').insert([payload]);
+            }
+
+            closeMenuModal();
+            if (typeof loadMenu === 'function') loadMenu();
+            alert('Đã lưu thành công!');
+          } catch (err) {
+            console.error('Lỗi lưu menu:', err);
+            alert('Không thể lưu món ăn. Vui lòng kiểm tra lại!');
+          }
+        }
+        // ==========================================
+
     </script>
 </body>
 </html>
