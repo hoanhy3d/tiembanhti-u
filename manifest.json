@@ -1,0 +1,22 @@
+{
+  "name": "Tiệm Bánh Ti Ù",
+  "short_name": "Bánh Ti Ù",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FFF5E9",
+  "theme_color": "#63391F",
+  "icons": [
+    {
+      "src": "logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
