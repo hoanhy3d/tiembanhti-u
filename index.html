@@ -151,11 +151,24 @@
                     </div>
                     <div>
                         <label class="font-bold text-brand-brown block mb-1">Đơn vị tính</label>
-                        <select id="ing-unit" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none">
-                            <option value="gam">gam (g)</option>
-                            <option value="ml">mililit (ml)</option>
-                            <option value="cái">cái / quả</option>
-                            <option value="kg">kg</option>
+                        <select id="ing-unit" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none text-xs">
+                            <optgroup label="Khối lượng">
+                                <option value="gam">gam (g)</option>
+                                <option value="kg">kilogam (kg)</option>
+                            </optgroup>
+                            <optgroup label="Thể tích">
+                                <option value="ml">mililit (ml)</option>
+                                <option value="lít">lít (l)</option>
+                                <option value="cc">cc / cm³</option>
+                                <option value="oz">fl oz</option>
+                            </optgroup>
+                            <optgroup label="Đơn vị đếm">
+                                <option value="cái">cái / quả</option>
+                                <option value="pc">pc (món)</option>
+                                <option value="pcs">pcs (số nhiều)</option>
+                                <option value="hộp">hộp / hũ</option>
+                                <option value="gói">gói / bao</option>
+                            </optgroup>
                         </select>
                     </div>
                 </div>
