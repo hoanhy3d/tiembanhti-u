@@ -1232,6 +1232,14 @@
                     </div>
                 `;
             }).join('');
+            // Tự động khóa Bếp khi ẩn ứng dụng hoặc chuyển tab điện thoại
+            document.addEventListener("visibilitychange", function() {
+                if (document.hidden && isAdminAuthenticated) {
+                    isAdminAuthenticated = false; // Hủy phiên làm việc Admin
+                    switchMode('user');           // Chuyển về màn hình Khách
+                    console.log("🔒 Gian bếp đã tự động khóa để bảo mật.");
+                }
+            });
         }
     </script>
 </body>
