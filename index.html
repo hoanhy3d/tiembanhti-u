@@ -3,1237 +3,1686 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tiệm Bánh Ti Ù - ERP v6.4 Bugfix & Robust Update</title>
+    <title>Tiệm Bánh Ti Ù - ERP v7.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            -webkit-tap-highlight-color: transparent; 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
             background-color: #FFF5E9;
             color: #4A2B18;
         }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .bg-brand-brown { background-color: #63391F; }
         .text-brand-brown { color: #63391F; }
-        .border-brand-brown { border-color: #63391F; }
         .bg-brand-card { background-color: #FFFDF9; }
-        .bg-brand-gold { background-color: #D49A50; }
         .text-brand-gold { color: #D49A50; }
+        .inp { width:100%; border:1px solid #E8D3C3; background:#fff; padding:10px; border-radius:12px; outline:none; font-size:12px; }
     </style>
 </head>
 <body class="pb-20">
 
-    <!-- CONFIG CONTAINER -->
-    <div id="config-modal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4">
-        <div class="bg-brand-card w-full max-w-md rounded-2xl p-5 space-y-4 shadow-2xl border border-[#E8D3C3]">
-            <div class="flex items-center space-x-3 border-b border-[#E8D3C3] pb-3">
-                <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-[#63391F] shadow-sm flex-shrink-0">
-                    <img src="logo.jpg" alt="Tiệm Bánh Ti Ù" class="w-full h-full object-cover scale-110">
+<!-- ============================================================
+     MODAL CẤU HÌNH CLOUD (BẢO MẬT)
+     Sửa v7.0: modal này KHÔNG còn tự bung ra mỗi lần mở app.
+     Nó chỉ hiện khi máy chưa từng lưu cấu hình, hoặc khi anh Huy
+     chủ động bấm nút trong tab Cài Đặt. Ô Key để type=password
+     + autocomplete=off nên trình duyệt không gợi ý / không lộ.
+============================================================ -->
+<div id="config-modal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-brand-card w-full max-w-md rounded-2xl p-5 space-y-4 shadow-2xl border border-[#E8D3C3]">
+        <div class="flex items-center justify-between border-b border-[#E8D3C3] pb-3">
+            <div class="flex items-center space-x-3">
+                <div class="w-11 h-11 rounded-full overflow-hidden border-2 border-[#63391F] flex-shrink-0">
+                    <img src="logo.jpg" alt="Logo" class="w-full h-full object-cover scale-110">
                 </div>
                 <div>
                     <h3 class="font-bold text-brand-brown text-base">Tiệm Bánh Ti Ù</h3>
-                    <p class="text-[11px] text-slate-500">Cấu hình kết nối Cloud Database (Supabase)</p>
+                    <p class="text-[11px] text-slate-500">Kết nối Cloud Database</p>
                 </div>
             </div>
-            <div class="space-y-3 text-xs">
-                <div>
-                    <label class="font-bold text-brand-brown block mb-1">Project URL:</label>
-                    <input id="cfg-url" type="text" value="https://qprjaojhfleycsmpqsqj.supabase.co" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none font-mono text-[11px]">
-                </div>
-                <div>
-                    <label class="font-bold text-brand-brown block mb-1">Publishable Key:</label>
-                    <input id="cfg-key" type="text" value="sb_publishable_N4LTMGhskjGoY-EdzNk_Ag_UC3KCzPG" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none font-mono text-[11px]">
-                </div>
-                <div>
-                    <label class="font-bold text-brand-brown block mb-1">Mã PIN Quản Bếp (Bảo mật):</label>
-                    <input id="cfg-pin" type="password" value="1234" autocomplete="new-password" inputmode="numeric" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none font-mono text-center text-sm font-bold">
-                </div>
-            </div>
-            <button id="btn-save-cfg" onclick="saveConfig()" class="w-full bg-brand-brown hover:bg-[#4A2B18] text-white font-bold py-3 rounded-xl text-xs shadow-md transition-all cursor-pointer">
-                Khởi Chạy Hệ Thống Bếp
-            </button>
+            <button onclick="closeConfigModal()" id="cfg-close-btn" class="text-slate-400 hidden"><i class="fa-solid fa-xmark"></i></button>
         </div>
-    </div>
-
-    <!-- MODAL PIN ADMIN -->
-    <div id="pin-modal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-brand-card w-full max-w-xs rounded-2xl p-5 space-y-4 shadow-2xl border border-[#E8D3C3] text-center">
-            <div class="w-12 h-12 bg-[#F4E4D4] rounded-full flex items-center justify-center mx-auto text-brand-brown text-xl">
-                <i class="fa-solid fa-lock"></i>
+        <div class="space-y-3 text-xs">
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Project URL:</label>
+                <!-- name ngẫu nhiên + autocomplete off => chặn autofill của Chrome -->
+                <input id="cfg-url" name="tiu_field_a1" type="text" autocomplete="off" autocorrect="off" spellcheck="false" class="inp font-mono text-[11px]">
             </div>
             <div>
-                <h3 class="font-bold text-brand-brown text-sm">Xác Nhận Quyền Quản Bếp</h3>
-                <p class="text-[11px] text-slate-500 mt-1">Vui lòng nhập mã PIN bảo mật</p>
+                <label class="font-bold text-brand-brown block mb-1">Publishable Key:</label>
+                <div class="relative">
+                    <input id="cfg-key" name="tiu_field_b2" type="password" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" class="inp font-mono text-[11px] pr-10">
+                    <button type="button" onclick="toggleKeyVisible()" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs px-1">
+                        <i id="cfg-key-eye" class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
             </div>
-            <input id="pin-input" type="password" maxlength="6" placeholder="• • • •" autocomplete="new-password" inputmode="numeric" pattern="[0-9]*" class="w-full border border-[#E8D3C3] bg-white p-3 rounded-xl outline-none text-center text-xl font-bold tracking-widest text-brand-brown">
-            <div class="flex space-x-2">
-                <button onclick="closePinModal()" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs">Hủy</button>
-                <button onclick="verifyPin()" class="w-1/2 bg-brand-brown text-white font-bold py-2.5 rounded-xl text-xs shadow-md">Mở Cổng</button>
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Mã PIN Quản Bếp:</label>
+                <input id="cfg-pin" name="tiu_field_c3" type="password" autocomplete="off" inputmode="numeric" data-lpignore="true" class="inp font-mono text-center text-sm font-bold">
             </div>
+            <p class="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-2 leading-relaxed">
+                <b>Lưu ý bảo mật:</b> Publishable Key vốn là key công khai, ai xem source web cũng thấy.
+                Cái thật sự giữ dữ liệu là <b>RLS Policy</b> trên Supabase. Mã PIN chỉ chặn người nhà bấm nhầm,
+                không phải lớp bảo mật thật.
+            </p>
+        </div>
+        <button onclick="saveConfig()" class="w-full bg-brand-brown text-white font-bold py-3 rounded-xl text-xs shadow-md">
+            Khởi Chạy Hệ Thống Bếp
+        </button>
+    </div>
+</div>
+
+<!-- MODAL PIN -->
+<div id="pin-modal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-brand-card w-full max-w-xs rounded-2xl p-5 space-y-4 shadow-2xl border border-[#E8D3C3] text-center">
+        <div class="w-12 h-12 bg-[#F4E4D4] rounded-full flex items-center justify-center mx-auto text-brand-brown text-xl">
+            <i class="fa-solid fa-lock"></i>
+        </div>
+        <h3 class="font-bold text-brand-brown text-sm">Xác Nhận Quyền Quản Bếp</h3>
+        <input id="pin-input" name="tiu_field_d4" type="password" maxlength="6" placeholder="• • • •" autocomplete="off" inputmode="numeric" data-lpignore="true" class="inp text-center text-xl font-bold tracking-widest text-brand-brown">
+        <div class="flex space-x-2">
+            <button onclick="closePinModal()" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs">Hủy</button>
+            <button onclick="verifyPin()" class="w-1/2 bg-brand-brown text-white font-bold py-2.5 rounded-xl text-xs">Mở Cổng</button>
         </div>
     </div>
+</div>
 
-    <!-- MODAL KHÁCH CHECKOUT & QR THANH TOÁN -->
-    <div id="checkout-modal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-brand-card w-full max-w-md rounded-2xl p-5 space-y-4 shadow-2xl border border-[#E8D3C3] max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-[#E8D3C3] pb-3">
-                <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-receipt text-brand-gold mr-1.5"></i>Đặt Bánh & Thanh Toán</h3>
-                <button onclick="closeCheckoutModal()" class="text-slate-400 text-sm hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+<!-- MODAL CHECKOUT KHÁCH -->
+<div id="checkout-modal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-brand-card w-full max-w-md rounded-2xl p-5 space-y-4 shadow-2xl border border-[#E8D3C3] max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center border-b border-[#E8D3C3] pb-3">
+            <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-receipt text-brand-gold mr-1.5"></i>Đặt Bánh & Thanh Toán</h3>
+            <button onclick="closeCheckoutModal()" class="text-slate-400 text-sm"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="space-y-3 text-xs">
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Tên người nhận bánh <span class="text-rose-500">*</span></label>
+                <input id="cust-name" type="text" placeholder="Ví dụ: Chị Lan" class="inp">
             </div>
-            <div class="space-y-3 text-xs">
-                <div>
-                    <label class="font-bold text-brand-brown block mb-1">Tên người nhận bánh <span class="text-rose-500">*</span></label>
-                    <input id="cust-name" type="text" placeholder="Ví dụ: Chị Lan" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none">
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Số điện thoại <span class="text-rose-500">*</span></label>
+                <input id="cust-phone" type="tel" inputmode="tel" placeholder="Ví dụ: 090xxxxxxx" class="inp">
+            </div>
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Địa chỉ giao bánh <span class="text-rose-500">*</span></label>
+                <textarea id="cust-note" rows="2" placeholder="123 Bình Chuẩn 62, Thuận An, Bình Dương..." class="inp"></textarea>
+            </div>
+            <div class="bg-[#F4E4D4]/60 p-3 rounded-xl space-y-2 border border-[#E8D3C3]">
+                <div class="flex justify-between items-center font-bold text-xs">
+                    <span class="text-brand-brown">Tổng đơn hàng:</span>
+                    <span id="checkout-total-price" class="text-brand-brown text-base">0đ</span>
                 </div>
-                <div>
-                    <label class="font-bold text-brand-brown block mb-1">Số điện thoại <span class="text-rose-500">*</span></label>
-                    <input id="cust-phone" type="tel" placeholder="Ví dụ: 090xxxxxxx" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none">
-                </div>
-                <div>
-                    <label class="font-bold text-brand-brown block mb-1">Địa chỉ giao bánh (Để dẫn đường Google Maps) <span class="text-rose-500">*</span></label>
-                    <textarea id="cust-note" rows="2" placeholder="Ví dụ: 123 Đường Bình Chuẩn 62, Thuận An, Bình Dương..." class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none"></textarea>
-                </div>
-                
-                <div class="bg-[#F4E4D4]/60 p-3 rounded-xl space-y-2 border border-[#E8D3C3]">
-                    <div class="flex justify-between items-center font-bold text-xs">
-                        <span class="text-brand-brown">Tổng đơn hàng:</span>
-                        <span id="checkout-total-price" class="text-brand-brown text-base">0đ</span>
-                    </div>
-                    <div id="qr-display-area" class="text-center pt-2 border-t border-[#E8D3C3]/60">
-                        <p class="text-[11px] font-bold text-brand-brown mb-1.5"><i class="fa-solid fa-qrcode mr-1"></i>Mã QR Chuyển Khoản Ngân Hàng</p>
-                        <img id="cust-qr-img" src="" alt="QR Thanh Toán" class="w-44 h-44 mx-auto rounded-xl border border-amber-300 shadow-xs object-contain bg-white">
-                    </div>
-                </div>
-
-                <div class="bg-amber-50 p-2.5 rounded-xl border border-amber-200 text-center">
-                    <p id="cust-thanks-msg" class="text-[11px] text-amber-900 font-medium italic">"Cảm ơn quý khách đã tin tưởng Bánh Ti Ù!"</p>
+                <div class="text-center pt-2 border-t border-[#E8D3C3]/60">
+                    <p class="text-[11px] font-bold text-brand-brown mb-1.5"><i class="fa-solid fa-qrcode mr-1"></i>Mã QR Chuyển Khoản</p>
+                    <img id="cust-qr-img" src="" alt="QR" class="w-44 h-44 mx-auto rounded-xl border border-amber-300 object-contain bg-white">
                 </div>
             </div>
-            <button onclick="confirmSubmitOrder()" class="w-full bg-brand-brown text-white font-bold py-3 rounded-xl text-xs shadow-md">
-                ✓ Xác Nhận Đặt Bánh Now
+            <div class="bg-amber-50 p-2.5 rounded-xl border border-amber-200 text-center">
+                <p id="cust-thanks-msg" class="text-[11px] text-amber-900 italic"></p>
+            </div>
+        </div>
+        <button id="btn-submit-order" onclick="confirmSubmitOrder()" class="w-full bg-brand-brown text-white font-bold py-3 rounded-xl text-xs shadow-md">
+            ✓ Xác Nhận Đặt Bánh
+        </button>
+    </div>
+</div>
+
+<!-- MODAL NHẬP / SỬA KHO -->
+<div id="add-ing-modal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-brand-card w-full max-w-md rounded-2xl p-5 space-y-4 shadow-2xl border border-[#E8D3C3] max-h-[92vh] overflow-y-auto">
+        <div class="flex justify-between items-center border-b border-[#E8D3C3] pb-3">
+            <h3 id="ing-modal-title" class="font-bold text-brand-brown text-sm">Nhập Kho Mới</h3>
+            <button onclick="closeAddIngModal()" class="text-slate-400 text-sm"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <input id="ing-id-hidden" type="hidden" value="">
+        <div class="space-y-3 text-xs">
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Loại kho lưu trữ *</label>
+                <select id="ing-category" class="inp font-bold text-brand-brown">
+                    <option value="nguyen_lieu">🥣 Kho Nguyên Liệu</option>
+                    <option value="bao_bi">📦 Kho Bao Bì</option>
+                    <option value="khuon_banh">🎂 Kho Khuôn Bánh</option>
+                </select>
+            </div>
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Tên vật tư / nguyên liệu *</label>
+                <input id="ing-name" type="text" placeholder="Ví dụ: Đường thốt nốt An Giang" class="inp">
+            </div>
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Hình ảnh (tên file hoặc link)</label>
+                <input id="ing-image" type="text" placeholder="duong-thot-not.jpg hoặc https://..." class="inp">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="font-bold text-brand-brown block mb-1">Số lượng tồn kho</label>
+                    <input id="ing-qty" type="number" inputmode="decimal" placeholder="1000" class="inp">
+                </div>
+                <div>
+                    <label class="font-bold text-brand-brown block mb-1">Đơn vị tính</label>
+                    <!-- v7.0: mở rộng đầy đủ đơn vị, chia nhóm cho dễ chọn -->
+                    <select id="ing-unit" class="inp"></select>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="font-bold text-brand-brown block mb-1">Tổng tiền mua (VNĐ)</label>
+                    <input id="ing-price" type="number" inputmode="numeric" placeholder="50000" class="inp">
+                </div>
+                <div>
+                    <label class="font-bold text-brand-brown block mb-1">Hạn sử dụng (HSD)</label>
+                    <input id="ing-expiry" type="date" class="inp">
+                </div>
+            </div>
+            <div id="ing-unitprice-preview" class="text-[11px] text-slate-500 italic"></div>
+        </div>
+        <div class="flex space-x-2">
+            <button id="btn-del-ing" onclick="deleteIngredient()" class="hidden w-1/3 bg-rose-100 text-rose-700 font-bold py-3 rounded-xl text-xs border border-rose-200">
+                <i class="fa-solid fa-trash mr-1"></i> Xóa
+            </button>
+            <button id="btn-save-ing" onclick="saveIngredient()" class="w-full bg-brand-brown text-white font-bold py-3 rounded-xl text-xs shadow-md">
+                + Lưu Kho Cloud
             </button>
         </div>
     </div>
+</div>
 
-    <!-- MODAL NHẬP / SỬA KHO -->
-    <div id="add-ing-modal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-brand-card w-full max-w-md rounded-2xl p-5 space-y-4 shadow-2xl border border-[#E8D3C3]">
-            <div class="flex justify-between items-center border-b border-[#E8D3C3] pb-3">
-                <h3 id="ing-modal-title" class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-boxes-packing text-brand-gold mr-1.5"></i>Nhập Kho Mới</h3>
-                <button onclick="closeAddIngModal()" class="text-slate-400 text-sm"><i class="fa-solid fa-xmark"></i></button>
+<!-- MODAL THÊM / SỬA CÔNG THỨC (MỚI v7.0) -->
+<div id="recipe-modal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-brand-card w-full max-w-md rounded-2xl p-5 space-y-4 shadow-2xl border border-[#E8D3C3] max-h-[92vh] overflow-y-auto">
+        <div class="flex justify-between items-center border-b border-[#E8D3C3] pb-3">
+            <h3 id="recipe-modal-title" class="font-bold text-brand-brown text-sm">Thêm Công Thức Mới</h3>
+            <button onclick="closeRecipeModal()" class="text-slate-400 text-sm"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <input id="recipe-id-hidden" type="hidden" value="">
+        <div class="space-y-3 text-xs">
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Tên món bánh *</label>
+                <input id="recipe-name" type="text" placeholder="Bánh Bò Thốt Nốt (Ổ 20cm)" class="inp">
             </div>
-            <input id="ing-id-hidden" type="hidden" value="">
-            <div class="space-y-3 text-xs">
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Ghi chú cách làm / mô tả</label>
+                <textarea id="recipe-desc" rows="2" placeholder="Hấp 25 phút lửa vừa..." class="inp"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
                 <div>
-                    <label class="font-bold text-brand-brown block mb-1">Loại kho lưu trữ *</label>
-                    <select id="ing-category" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none font-bold text-brand-brown">
-                        <option value="nguyen_lieu">🥣 Kho Nguyên Liệu (Bột, Đường, Trứng...)</option>
-                        <option value="bao_bi">📦 Kho Bao Bì (Hộp, Túi, Tem nhãn...)</option>
-                        <option value="khuon_banh">🎂 Kho Khuôn Bánh (Khuôn nhôm, Khay...)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="font-bold text-brand-brown block mb-1">Tên vật tư / nguyên liệu *</label>
-                    <input id="ing-name" type="text" placeholder="Ví dụ: Đường thốt nốt An Giang" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none">
+                    <label class="font-bold text-brand-brown block mb-1">Chi phí bao bì (đ)</label>
+                    <input id="recipe-pack" type="number" inputmode="numeric" placeholder="3000" class="inp">
                 </div>
                 <div>
-                    <label class="font-bold text-brand-brown block mb-1">Hình ảnh nhận biết (Tên file hoặc Link ảnh)</label>
-                    <input id="ing-image" type="text" placeholder="VD: duong-thot-not.jpg hoặc link https://..." class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none">
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="font-bold text-brand-brown block mb-1">Số lượng tồn kho</label>
-                        <input id="ing-qty" type="number" placeholder="1000" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none">
-                    </div>
-                    <div>
-                        <label class="font-bold text-brand-brown block mb-1">Đơn vị tính</label>
-                        <select id="ing-unit" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none">
-                            <option value="gam">gam (g)</option>
-                            <option value="ml">mililit (ml)</option>
-                            <option value="cái">cái / hộp / cái khuôn</option>
-                            <option value="kg">kg</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="font-bold text-brand-brown block mb-1">Tổng tiền mua (VNĐ)</label>
-                        <input id="ing-price" type="number" placeholder="50000" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none">
-                    </div>
-                    <div>
-                        <label class="font-bold text-brand-brown block mb-1">Hạn sử dụng (HSD)</label>
-                        <input id="ing-expiry" type="date" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none">
-                    </div>
+                    <label class="font-bold text-brand-brown block mb-1">Chi phí nhân công (đ)</label>
+                    <input id="recipe-labor" type="number" inputmode="numeric" placeholder="10000" class="inp">
                 </div>
             </div>
-            <div class="flex space-x-2">
-                <button id="btn-del-ing" onclick="deleteIngredient()" class="hidden w-1/3 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold py-3 rounded-xl text-xs border border-rose-200 shadow-xs">
-                    <i class="fa-solid fa-trash mr-1"></i> Xóa
+
+            <div class="bg-[#F9EFE4] p-3 rounded-xl border border-[#E8D3C3] space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="font-bold text-brand-brown text-[11px]">🥣 Định lượng nguyên liệu / 1 mẻ</span>
+                    <button onclick="addRecipeIngRow()" class="bg-brand-brown text-white text-[10px] font-bold px-2 py-1 rounded-lg">+ Thêm dòng</button>
+                </div>
+                <div id="recipe-ing-rows" class="space-y-2"></div>
+                <div class="text-[10px] text-amber-800 border-t border-[#E8D3C3] pt-1.5">
+                    ⚠️ Số lượng phải nhập <b>đúng đơn vị của kho</b> (kho ghi gam thì nhập gam, kho ghi kg thì nhập kg),
+                    nếu không giá thành và việc trừ kho sẽ sai lệch.
+                </div>
+                <div id="recipe-cost-preview" class="text-[11px] font-bold text-brand-brown"></div>
+            </div>
+        </div>
+        <div class="flex space-x-2">
+            <button id="btn-del-recipe" onclick="deleteRecipe()" class="hidden w-1/3 bg-rose-100 text-rose-700 font-bold py-3 rounded-xl text-xs border border-rose-200">
+                <i class="fa-solid fa-trash mr-1"></i> Xóa
+            </button>
+            <button onclick="saveRecipe()" class="w-full bg-brand-brown text-white font-bold py-3 rounded-xl text-xs shadow-md">
+                ✓ Lưu Công Thức
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL ĐĂNG MÓN LÊN MENU -->
+<div id="add-menu-item-modal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-brand-card w-full max-w-md rounded-2xl p-5 space-y-4 shadow-2xl border border-[#E8D3C3] max-h-[92vh] overflow-y-auto">
+        <div class="flex justify-between items-center border-b border-[#E8D3C3] pb-3">
+            <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-store text-brand-gold mr-1.5"></i>Cấu Hình Món Đăng Menu</h3>
+            <button onclick="closeAddMenuItemModal()" class="text-slate-400 text-sm"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="space-y-3 text-xs">
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Chọn món từ Bảng Công Thức *</label>
+                <select id="menu-recipe-select" onchange="onMenuRecipeChange()" class="inp font-bold text-brand-brown"></select>
+            </div>
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Giá bán cho Khách (VNĐ) *</label>
+                <input id="menu-item-price" type="number" inputmode="numeric" placeholder="85000" class="inp">
+                <p id="menu-cost-hint" class="text-[10px] text-slate-500 mt-1"></p>
+            </div>
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Hình ảnh món (tên file / link)</label>
+                <input id="menu-item-image" type="text" placeholder="banh-bo-thot-not.jpg" class="inp">
+            </div>
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Mô tả ngắn cho Khách</label>
+                <textarea id="menu-item-desc" rows="2" placeholder="Ổ 20cm thơm dẻo chuẩn vị..." class="inp"></textarea>
+            </div>
+        </div>
+        <div class="flex space-x-2">
+            <button onclick="removeMenuItemFromPublic()" class="w-1/3 bg-rose-100 text-rose-700 font-bold py-3 rounded-xl text-xs border border-rose-200">
+                <i class="fa-solid fa-eye-slash mr-1"></i> Tạm Ngưng
+            </button>
+            <button onclick="saveMenuItemToPublic()" class="w-2/3 bg-brand-brown text-white font-bold py-3 rounded-xl text-xs shadow-md">
+                ✓ Bật Bán On Menu
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL SỬA KHÁCH HÀNG (MỚI v7.0) -->
+<div id="cust-edit-modal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-brand-card w-full max-w-md rounded-2xl p-5 space-y-4 shadow-2xl border border-[#E8D3C3]">
+        <div class="flex justify-between items-center border-b border-[#E8D3C3] pb-3">
+            <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-user-pen text-brand-gold mr-1.5"></i>Sửa Thông Tin Khách</h3>
+            <button onclick="closeCustEditModal()" class="text-slate-400 text-sm"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <input id="cust-edit-phone-key" type="hidden">
+        <div class="space-y-3 text-xs">
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Tên khách</label>
+                <input id="cust-edit-name" type="text" class="inp">
+            </div>
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Số điện thoại</label>
+                <input id="cust-edit-phone" type="tel" inputmode="tel" class="inp">
+            </div>
+            <div>
+                <label class="font-bold text-brand-brown block mb-1">Địa chỉ giao hàng</label>
+                <textarea id="cust-edit-addr" rows="2" class="inp"></textarea>
+            </div>
+            <p class="text-[10px] text-slate-500 italic">Sửa ở đây sẽ cập nhật cho <b>tất cả đơn hàng</b> của số điện thoại này.</p>
+        </div>
+        <div class="flex space-x-2">
+            <button onclick="deleteCustomer()" class="w-1/3 bg-rose-100 text-rose-700 font-bold py-3 rounded-xl text-xs border border-rose-200">
+                <i class="fa-solid fa-trash mr-1"></i> Xóa Khách
+            </button>
+            <button onclick="saveCustomerEdit()" class="w-2/3 bg-brand-brown text-white font-bold py-3 rounded-xl text-xs shadow-md">✓ Lưu Thay Đổi</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MAIN APP ================= -->
+<div id="app-container" class="hidden">
+    <header class="sticky top-0 z-40 bg-[#FFFDF9]/90 backdrop-blur-md border-b border-[#E8D3C3] px-4 py-2.5">
+        <div class="max-w-md mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-10 h-10 rounded-full overflow-hidden border border-[#63391F] flex-shrink-0">
+                    <img src="logo.jpg" alt="Logo" class="w-full h-full object-cover scale-110">
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-brand-brown text-base leading-tight">Tiệm Bánh Ti Ù</h1>
+                    <p class="text-[10px] text-brand-gold font-bold">SINCE 2022 • 0904052347</p>
+                </div>
+            </div>
+            <div class="bg-[#F4E4D4] p-1 rounded-xl flex text-xs font-semibold">
+                <button id="btn-mode-user" onclick="switchMode('user')" class="px-2.5 py-1.5 rounded-lg bg-brand-brown text-white font-bold">
+                    <i class="fa-solid fa-store mr-1"></i> Khách
                 </button>
-                <button id="btn-save-ing" onclick="saveIngredient()" class="w-full bg-brand-brown text-white font-bold py-3 rounded-xl text-xs shadow-md">
-                    + Lưu Kho Cloud
+                <button id="btn-mode-admin" onclick="triggerAdminAuth()" class="px-2.5 py-1.5 rounded-lg text-brand-brown">
+                    <i class="fa-solid fa-lock mr-1"></i> Bếp
                 </button>
             </div>
         </div>
-    </div>
+    </header>
 
-    <!-- MODAL ĐĂNG / SỬA MÓN BÁN HÀNG -->
-    <div id="add-menu-item-modal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-brand-card w-full max-w-md rounded-2xl p-5 space-y-4 shadow-2xl border border-[#E8D3C3]">
-            <div class="flex justify-between items-center border-b border-[#E8D3C3] pb-3">
-                <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-store text-brand-gold mr-1.5"></i>Cấu Hình Món Đăng Menu Khách</h3>
-                <button onclick="closeAddMenuItemModal()" class="text-slate-400 text-sm"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="space-y-3 text-xs">
-                <div>
-                    <label class="font-bold text-brand-brown block mb-1">Chọn món từ Bảng Công Thức Bếp *</label>
-                    <select id="menu-recipe-select" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none font-bold text-brand-brown"></select>
+    <main class="max-w-md mx-auto p-4 space-y-4">
+        <!-- VIEW KHÁCH -->
+        <div id="view-user" class="space-y-4">
+            <div class="bg-gradient-to-r from-[#63391F] to-[#8C522C] rounded-2xl p-4 text-white flex items-center justify-between border border-[#4A2B18]">
+                <div class="space-y-1 max-w-[65%]">
+                    <span class="bg-[#D49A50] text-white text-[10px] px-2 py-0.5 rounded-full font-bold">Đặc Sản Bánh Quê</span>
+                    <h2 class="text-base font-bold leading-tight">Thơm Ngon Chuẩn Vị Nhà Làm</h2>
+                    <p class="text-[11px] text-[#F3D7C4]">Bánh Bò Thốt Nốt, Flan, Bánh Mì & Kẹo Dẻo</p>
                 </div>
-                <div>
-                    <label class="font-bold text-brand-brown block mb-1">Giá bán công khai cho Khách (VNĐ) *</label>
-                    <input id="menu-item-price" type="number" placeholder="85000" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none">
-                </div>
-                <div>
-                    <label class="font-bold text-brand-brown block mb-1">Hình ảnh món bánh đăng Menu (Tên file / Link)</label>
-                    <input id="menu-item-image" type="text" placeholder="banh-bo-thot-not.jpg hoặc link https://..." class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none">
-                </div>
-                <div>
-                    <label class="font-bold text-brand-brown block mb-1">Mô tả ngắn hấp dẫn cho Khách</label>
-                    <textarea id="menu-item-desc" rows="2" placeholder="Ổ 20cm thơm dẻo chuẩn vị thốt nốt An Giang..." class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none"></textarea>
+                <div class="w-20 h-20 rounded-full overflow-hidden border border-amber-200 flex-shrink-0">
+                    <img src="logo.jpg" alt="Logo" class="w-full h-full object-cover">
                 </div>
             </div>
-            <div class="flex space-x-2">
-                <button onclick="removeMenuItemFromPublic()" class="w-1/3 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold py-3 rounded-xl text-xs border border-rose-200 shadow-xs">
-                    <i class="fa-solid fa-eye-slash mr-1"></i> Tạm Ngưng
-                </button>
-                <button onclick="saveMenuItemToPublic()" class="w-2/3 bg-[#63391F] text-white font-bold py-3 rounded-xl text-xs shadow-md">
-                    ✓ Bật Bán On Menu
-                </button>
+            <div id="user-cake-list" class="grid grid-cols-2 gap-3"></div>
+            <div class="bg-brand-card rounded-2xl p-4 border border-[#E8D3C3] space-y-3">
+                <div class="flex justify-between items-center border-b border-[#E8D3C3] pb-2">
+                    <span class="font-bold text-brand-brown text-xs"><i class="fa-solid fa-cart-shopping text-brand-gold mr-1"></i> Giỏ hàng của bạn</span>
+                    <span id="cart-qty-badge" class="bg-[#F4E4D4] text-brand-brown text-[10px] font-bold px-2 py-0.5 rounded-full">0 món</span>
+                </div>
+                <div id="cart-items-container" class="text-xs space-y-1.5 text-slate-600 min-h-[30px]">Chưa chọn bánh nào.</div>
+                <div class="space-y-2 border-t border-[#E8D3C3] pt-2 text-xs">
+                    <div class="flex justify-between items-center pt-1 font-bold">
+                        <span class="text-brand-brown">Tổng tiền:</span>
+                        <span id="cart-total-price" class="text-brand-brown text-base">0đ</span>
+                    </div>
+                    <button onclick="openCheckoutModal()" class="w-full bg-brand-brown text-white font-bold py-3 rounded-xl">
+                        Tiến Hành Đặt Bánh <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- MAIN APP CONTAINER -->
-    <div id="app-container" class="hidden">
-        <!-- HEADER -->
-        <header class="sticky top-0 z-40 bg-[#FFFDF9]/90 backdrop-blur-md border-b border-[#E8D3C3] shadow-xs px-4 py-2.5">
-            <div class="max-w-md mx-auto flex items-center justify-between">
-                <div class="flex items-center space-x-2.5">
-                    <div class="w-10 h-10 rounded-full overflow-hidden border border-[#63391F] shadow-xs flex-shrink-0">
-                        <img src="logo.jpg" alt="Tiệm Bánh Ti Ù" class="w-full h-full object-cover scale-110">
+        <!-- VIEW BẾP -->
+        <div id="view-admin" class="space-y-3 hidden">
+            <div class="grid grid-cols-4 gap-1.5 bg-[#F4E4D4] p-1.5 rounded-2xl text-xs font-bold text-center border border-[#E8D3C3]">
+                <button id="nav-customers" onclick="switchAdminTab('customers')" class="admin-tab-btn py-2.5 rounded-xl text-brand-brown">Khách Hàng</button>
+                <button id="nav-recipe" onclick="switchAdminTab('recipe')" class="admin-tab-btn py-2.5 rounded-xl text-brand-brown">Công Thức</button>
+                <button id="nav-add-menu" onclick="switchAdminTab('add-menu')" class="admin-tab-btn py-2.5 rounded-xl text-brand-brown">+ Món</button>
+                <button id="nav-settings" onclick="switchAdminTab('settings')" class="admin-tab-btn py-2.5 rounded-xl text-brand-brown"><i class="fa-solid fa-gear"></i> Cài Đặt</button>
+            </div>
+
+            <div class="grid grid-cols-3 gap-1 bg-[#E8D3C3]/50 p-1.5 rounded-2xl text-[11px] font-bold text-center border border-[#E8D3C3]">
+                <button id="nav-kho-nl" onclick="switchAdminTab('kho-nl')" class="admin-tab-btn py-2 rounded-xl text-brand-brown">Kho Nguyên Liệu</button>
+                <button id="nav-kho-bb" onclick="switchAdminTab('kho-bb')" class="admin-tab-btn py-2 rounded-xl text-brand-brown">Kho Bao Bì</button>
+                <button id="nav-kho-kb" onclick="switchAdminTab('kho-kb')" class="admin-tab-btn py-2 rounded-xl text-brand-brown">Kho Khuôn Bánh</button>
+            </div>
+
+            <div class="grid grid-cols-4 gap-1 bg-[#E8D3C3]/80 p-1.5 rounded-2xl text-[10px] font-bold text-center border border-[#E8D3C3]">
+                <button id="nav-flow-1" onclick="switchAdminTab('flow-1')" class="admin-tab-btn py-2 rounded-xl text-brand-brown relative">Đơn Mới
+                    <span id="orders-badge-1" class="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] min-w-[16px] h-4 px-1 rounded-full items-center justify-center hidden">0</span></button>
+                <button id="nav-flow-2" onclick="switchAdminTab('flow-2')" class="admin-tab-btn py-2 rounded-xl text-brand-brown relative">Chuẩn Bị
+                    <span id="orders-badge-2" class="absolute -top-1 -right-1 bg-amber-600 text-white text-[8px] min-w-[16px] h-4 px-1 rounded-full items-center justify-center hidden">0</span></button>
+                <button id="nav-flow-3" onclick="switchAdminTab('flow-3')" class="admin-tab-btn py-2 rounded-xl text-brand-brown relative">Tiến Hành
+                    <span id="orders-badge-3" class="absolute -top-1 -right-1 bg-blue-600 text-white text-[8px] min-w-[16px] h-4 px-1 rounded-full items-center justify-center hidden">0</span></button>
+                <button id="nav-flow-4" onclick="switchAdminTab('flow-4')" class="admin-tab-btn py-2 rounded-xl text-brand-brown relative">Giao Hàng
+                    <span id="orders-badge-4" class="absolute -top-1 -right-1 bg-emerald-600 text-white text-[8px] min-w-[16px] h-4 px-1 rounded-full items-center justify-center hidden">0</span></button>
+            </div>
+
+            <div id="sec-add-menu" class="space-y-3 hidden">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-utensils text-brand-gold mr-1"></i>Món Đang Bán On Menu</h3>
+                        <p class="text-[10px] text-slate-500">Bấm công tắc để bật/tắt bán ngay, không mất giá cũ</p>
+                    </div>
+                    <button onclick="openAddMenuItemModal()" class="bg-brand-brown text-white text-xs px-3 py-1.5 rounded-xl font-bold">+ Đăng Món</button>
+                </div>
+                <div id="admin-menu-items-list" class="space-y-2.5"></div>
+            </div>
+
+            <div id="sec-customers" class="space-y-3 hidden">
+                <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-users text-brand-gold mr-1"></i>Danh Sách Khách Hàng (CRM)</h3>
+                <p class="text-[10px] text-slate-500 -mt-2">Tự tích lượt mua, theo dõi công nợ & khách boom hàng</p>
+                <div id="crm-customer-list" class="space-y-2.5"></div>
+            </div>
+
+            <div id="sec-recipe" class="space-y-3 hidden">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-brand-brown text-sm">Bảng Công Thức Bánh</h3>
+                        <p class="text-[10px] text-slate-500">Bấm vào thẻ để sửa định lượng & giá thành</p>
+                    </div>
+                    <button onclick="openRecipeModal()" class="bg-brand-brown text-white text-xs px-3 py-1.5 rounded-xl font-bold">+ Thêm Công Thức</button>
+                </div>
+                <div id="recipe-list" class="space-y-3"></div>
+            </div>
+
+            <div id="sec-kho-nl" class="space-y-3 hidden">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-brand-brown text-sm">Kho Nguyên Liệu Chế Biến</h3>
+                    <button onclick="openAddIngModal('nguyen_lieu')" class="bg-brand-brown text-white text-xs px-3 py-1.5 rounded-lg font-bold">+ Nhập Kho NL</button>
+                </div>
+                <div id="ing-list-nl" class="space-y-2"></div>
+            </div>
+
+            <div id="sec-kho-bb" class="space-y-3 hidden">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-brand-brown text-sm">Kho Bao Bì & Đóng Gói</h3>
+                    <button onclick="openAddIngModal('bao_bi')" class="bg-brand-brown text-white text-xs px-3 py-1.5 rounded-lg font-bold">+ Nhập Bao Bì</button>
+                </div>
+                <div id="ing-list-bb" class="space-y-2"></div>
+            </div>
+
+            <div id="sec-kho-kb" class="space-y-3 hidden">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-brand-brown text-sm">Kho Khuôn & Khay Nướng</h3>
+                    <button onclick="openAddIngModal('khuon_banh')" class="bg-brand-brown text-white text-xs px-3 py-1.5 rounded-lg font-bold">+ Nhập Khuôn</button>
+                </div>
+                <div id="ing-list-kb" class="space-y-2"></div>
+            </div>
+
+            <div id="sec-flow-1" class="space-y-3 hidden">
+                <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-bell text-amber-600 mr-1.5"></i>Đơn Hàng Mới Nhận</h3>
+                <div id="admin-orders-list-1" class="space-y-3"></div>
+            </div>
+            <div id="sec-flow-2" class="space-y-3 hidden">
+                <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-list-check text-amber-600 mr-1.5"></i>Chuẩn Bị & Bóc Tách Kho</h3>
+                <div id="admin-orders-list-2" class="space-y-3"></div>
+            </div>
+            <div id="sec-flow-3" class="space-y-3 hidden">
+                <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-fire-burner text-amber-600 mr-1.5"></i>Tiến Hành Làm Bánh</h3>
+                <div id="admin-orders-list-3" class="space-y-3"></div>
+            </div>
+            <div id="sec-flow-4" class="space-y-3 hidden">
+                <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-truck-fast text-emerald-600 mr-1.5"></i>Giao Bánh & Dẫn Đường</h3>
+                <div id="admin-orders-list-4" class="space-y-3"></div>
+            </div>
+
+            <div id="sec-settings" class="space-y-4 hidden">
+                <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-sliders text-brand-gold mr-1.5"></i>Cài Đặt Bếp</h3>
+                <div class="bg-brand-card p-4 rounded-2xl border border-[#E8D3C3] space-y-3 text-xs">
+                    <div>
+                        <label class="font-bold text-brand-brown block mb-1">Mã PIN Quản Bếp Mới:</label>
+                        <input id="set-pin" name="tiu_field_e5" type="password" maxlength="6" autocomplete="off" data-lpignore="true" class="inp text-center font-bold tracking-widest">
                     </div>
                     <div>
-                        <h1 class="font-extrabold text-brand-brown text-base leading-tight">Tiệm Bánh Ti Ù</h1>
-                        <p class="text-[10px] text-brand-gold font-bold">SINCE 2022 • 0904052347</p>
+                        <label class="font-bold text-brand-brown block mb-1">URL Mã QR Thanh Toán:</label>
+                        <input id="set-qr" type="text" placeholder="https://api.vietqr.io/..." class="inp font-mono text-[11px]">
                     </div>
+                    <div>
+                        <label class="font-bold text-brand-brown block mb-1">Lời Cảm Ơn Cho Khách:</label>
+                        <textarea id="set-thanks" rows="2" class="inp"></textarea>
+                    </div>
+                    <button onclick="saveKitchenSettings()" class="w-full bg-brand-brown text-white font-bold py-2.5 rounded-xl">✓ Cập Nhật Cài Đặt</button>
                 </div>
-                
-                <div class="bg-[#F4E4D4] p-1 rounded-xl flex text-xs font-semibold">
-                    <button id="btn-mode-user" onclick="switchMode('user')" class="px-2.5 py-1.5 rounded-lg transition-all bg-brand-brown text-white shadow-xs font-bold">
-                        <i class="fa-solid fa-store mr-1"></i> Khách
-                    </button>
-                    <button id="btn-mode-admin" onclick="triggerAdminAuth()" class="px-2.5 py-1.5 rounded-lg transition-all text-brand-brown">
-                        <i class="fa-solid fa-lock mr-1"></i> Bếp
-                    </button>
+
+                <div class="bg-brand-card p-4 rounded-2xl border border-[#E8D3C3] space-y-2 text-xs">
+                    <span class="font-bold text-brand-brown"><i class="fa-solid fa-database text-brand-gold mr-1"></i> Kết nối Cloud</span>
+                    <p class="text-[10px] text-slate-500">Chỉ mở khi cần đổi Project Supabase. Key được che mặc định.</p>
+                    <button onclick="openConfigModal()" class="w-full bg-[#F4E4D4] text-brand-brown font-bold py-2.5 rounded-xl border border-[#E8D3C3]">⚙️ Mở Cấu Hình Kết Nối</button>
+                    <button onclick="lockKitchen()" class="w-full bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl">🔒 Khóa Bếp (Đăng xuất)</button>
+                </div>
+
+                <div class="bg-amber-50 p-4 rounded-2xl border border-amber-300 space-y-2 text-xs">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-brand-brown"><i class="fa-solid fa-arrows-rotate text-amber-700 mr-1"></i> Phiên bản:</span>
+                        <span class="bg-amber-200 text-amber-900 font-extrabold px-2 py-0.5 rounded-full text-[10px]">v7.0</span>
+                    </div>
+                    <button onclick="triggerSoftwareUpdate()" class="w-full bg-amber-700 text-white font-bold py-2.5 rounded-xl">🔄 Xóa Cache & Tải Bản Mới</button>
                 </div>
             </div>
-        </header>
+        </div>
+    </main>
+</div>
 
-        <main class="max-w-md mx-auto p-4 space-y-4">
+<script>
+/* ==========================================================================
+   TIỆM BÁNH TI Ù - ERP v7.0
+   Toàn bộ comment tiếng Việt, giải thích "tại sao" chứ không chỉ "làm gì".
+   ========================================================================== */
 
-            <!-- USER VIEW (KHÁCH XEM & ĐẶT) -->
-            <div id="view-user" class="space-y-4">
-                <div class="bg-gradient-to-r from-[#63391F] to-[#8C522C] rounded-2xl p-4 text-white shadow-md relative overflow-hidden flex items-center justify-between border border-[#4A2B18]">
-                    <div class="space-y-1 z-10 max-w-[65%]">
-                        <span class="bg-[#D49A50] text-white text-[10px] px-2 py-0.5 rounded-full font-bold">Đặc Sản Bánh Quê</span>
-                        <h2 class="text-base font-bold leading-tight">Thơm Ngon Chuẩn Vị Nhà Làm</h2>
-                        <p class="text-[11px] text-[#F3D7C4]">Bánh Bò Thốt Nốt, Flan, Bánh Mì & Kẹo Dẻo</p>
-                    </div>
-                    <div class="w-20 h-20 rounded-full overflow-hidden border border-amber-200 shadow-md flex-shrink-0">
-                        <img src="logo.jpg" alt="Tiệm Bánh Ti Ù" class="w-full h-full object-cover scale-120">
-                    </div>
-                </div>
-                
-                <div id="user-cake-list" class="grid grid-cols-2 gap-3"></div>
+// --- Hằng số: KHÔNG hardcode key vào thuộc tính value của thẻ input nữa.
+// Lý do: value nằm trong HTML => trình duyệt coi đó là dữ liệu form và gợi ý
+// autofill, đồng thời ai "View Source" cũng đọc được ngay dòng đầu.
+const DEFAULT_URL = 'https://qprjaojhfleycsmpqsqj.supabase.co';
+const DEFAULT_KEY = 'sb_publishable_N4LTMGhskjGoY-EdzNk_Ag_UC3KCzPG';
 
-                <!-- GIỎ HÀNG -->
-                <div class="bg-brand-card rounded-2xl p-4 border border-[#E8D3C3] shadow-sm space-y-3">
-                    <div class="flex justify-between items-center border-b border-[#E8D3C3] pb-2">
-                        <span class="font-bold text-brand-brown text-xs"><i class="fa-solid fa-cart-shopping text-brand-gold mr-1"></i> Giỏ hàng của bạn</span>
-                        <span id="cart-qty-badge" class="bg-[#F4E4D4] text-brand-brown text-[10px] font-bold px-2 py-0.5 rounded-full">0 món</span>
-                    </div>
-                    <div id="cart-items-container" class="text-xs space-y-1.5 text-slate-600 min-h-[30px]">
-                        Chưa chọn bánh nào.
-                    </div>
-                    <div class="space-y-2 border-t border-[#E8D3C3] pt-2 text-xs">
-                        <div class="flex justify-between items-center pt-1 font-bold">
-                            <span class="text-brand-brown">Tổng tiền:</span>
-                            <span id="cart-total-price" class="text-brand-brown text-base">0đ</span>
-                        </div>
-                        <button onclick="openCheckoutModal()" class="w-full bg-brand-brown text-white font-bold py-3 rounded-xl shadow-md transition-all cursor-pointer">
-                            Tiến Hành Đặt Bánh <i class="fa-solid fa-arrow-right ml-1"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
+let supabaseClient = null;
+let cart = [];
+let globalRecipes = [];
+let globalIngredients = [];
+let globalOrders = [];
+let isAdminAuthenticated = false;
+let currentAdminTab = 'flow-1';
 
-            <!-- ADMIN VIEW -->
-            <div id="view-admin" class="space-y-3 hidden">
-                
-                <!-- HÀNG 1: KHÁCH HÀNG | CÔNG THỨC | + MÓN | CÀI ĐẶT -->
-                <div class="grid grid-cols-4 gap-1.5 bg-[#F4E4D4] p-1.5 rounded-2xl text-xs font-bold text-center border border-[#E8D3C3]">
-                    <button id="nav-customers" onclick="switchAdminTab('customers')" class="admin-tab-btn py-2.5 rounded-xl text-brand-brown hover:bg-white/50 transition-all cursor-pointer">Khách Hàng</button>
-                    <button id="nav-recipe" onclick="switchAdminTab('recipe')" class="admin-tab-btn py-2.5 rounded-xl text-brand-brown hover:bg-white/50 transition-all cursor-pointer">Công Thức</button>
-                    <button id="nav-add-menu" onclick="switchAdminTab('add-menu')" class="admin-tab-btn py-2.5 rounded-xl text-brand-brown hover:bg-white/50 transition-all cursor-pointer">+ Món</button>
-                    <button id="nav-settings" onclick="switchAdminTab('settings')" class="admin-tab-btn py-2.5 rounded-xl text-brand-brown hover:bg-white/50 transition-all cursor-pointer"><i class="fa-solid fa-gear mr-0.5"></i> Cài Đặt</button>
-                </div>
+/* --------------------------------------------------------------
+   NHÓM HÀM TIỆN ÍCH
+   -------------------------------------------------------------- */
 
-                <!-- HÀNG 2: KHO NGUYÊN LIỆU | KHO BAO BÌ | KHO KHUÔN BÁNH -->
-                <div class="grid grid-cols-3 gap-1 bg-[#E8D3C3]/50 p-1.5 rounded-2xl text-[11px] font-bold text-center border border-[#E8D3C3]">
-                    <button id="nav-kho-nl" onclick="switchAdminTab('kho-nl')" class="admin-tab-btn py-2 rounded-xl text-brand-brown hover:bg-white/50 transition-all cursor-pointer">Kho Nguyên Liệu</button>
-                    <button id="nav-kho-bb" onclick="switchAdminTab('kho-bb')" class="admin-tab-btn py-2 rounded-xl text-brand-brown hover:bg-white/50 transition-all cursor-pointer">Kho Bao Bì</button>
-                    <button id="nav-kho-kb" onclick="switchAdminTab('kho-kb')" class="admin-tab-btn py-2 rounded-xl text-brand-brown hover:bg-white/50 transition-all cursor-pointer">Kho Khuôn Bánh</button>
-                </div>
+// Chặn lỗi vỡ HTML khi tên khách / tên món có dấu nháy hoặc <>.
+// Không có hàm này, một khách tên  Chị Lan "Bé"  sẽ làm hỏng cả thẻ div.
+function esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 
-                <!-- HÀNG 3: ĐƠN MỚI > CHUẨN BỊ > TIẾN HÀNH > GIAO HÀNG -->
-                <div class="grid grid-cols-4 gap-1 bg-[#E8D3C3]/80 p-1.5 rounded-2xl text-[10px] font-bold text-center border border-[#E8D3C3]">
-                    <button id="nav-flow-1" onclick="switchAdminTab('flow-1')" class="admin-tab-btn py-2 rounded-xl text-brand-brown relative transition-all cursor-pointer">
-                        Đơn Mới
-                        <span id="orders-badge-1" class="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center hidden">0</span>
-                    </button>
-                    <button id="nav-flow-2" onclick="switchAdminTab('flow-2')" class="admin-tab-btn py-2 rounded-xl text-brand-brown relative transition-all cursor-pointer">
-                        Chuẩn Bị
-                        <span id="orders-badge-2" class="absolute -top-1 -right-1 bg-amber-600 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center hidden">0</span>
-                    </button>
-                    <button id="nav-flow-3" onclick="switchAdminTab('flow-3')" class="admin-tab-btn py-2 rounded-xl text-brand-brown relative transition-all cursor-pointer">
-                        Tiến Hành
-                        <span id="orders-badge-3" class="absolute -top-1 -right-1 bg-blue-600 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center hidden">0</span>
-                    </button>
-                    <button id="nav-flow-4" onclick="switchAdminTab('flow-4')" class="admin-tab-btn py-2 rounded-xl text-brand-brown relative transition-all cursor-pointer">
-                        Giao Hàng
-                        <span id="orders-badge-4" class="absolute -top-1 -right-1 bg-emerald-600 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center hidden">0</span>
-                    </button>
-                </div>
+function money(n) { return (Number(n) || 0).toLocaleString('vi-VN') + 'đ'; }
 
-                <!-- CONTENT AREAS -->
-                
-                <!-- CONTENT MÓN BÁN HÀNG (+ MÓN TAB) -->
-                <div id="sec-add-menu" class="space-y-3 hidden">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-utensils text-brand-gold mr-1"></i>Món Bánh Đang Bán On Menu</h3>
-                            <p class="text-[10px] text-slate-500">Bật/tắt bán món cũ hoặc trưng thêm món mới cho Khách</p>
-                        </div>
-                        <button onclick="openAddMenuItemModal()" class="bg-[#63391F] text-white text-xs px-3 py-1.5 rounded-xl font-bold shadow-xs border border-amber-300 cursor-pointer">+ Đăng Món Mới</button>
-                    </div>
-                    <div id="admin-menu-items-list" class="space-y-2.5"></div>
-                </div>
-
-                <!-- CONTENT KHÁCH HÀNG CRM -->
-                <div id="sec-customers" class="space-y-3 hidden">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-users text-brand-gold mr-1"></i>Danh Sách Khách Hàng (CRM)</h3>
-                            <p class="text-[10px] text-slate-500">Tự động tích điểm, đếm lượt mua & xếp hạng sao theo SĐT</p>
-                        </div>
-                    </div>
-                    <div id="crm-customer-list" class="space-y-2.5"></div>
-                </div>
-
-                <!-- CONTENT CÔNG THỨC -->
-                <div id="sec-recipe" class="space-y-3 hidden">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-brand-brown text-sm">Bảng Công Thức Bánh Standard</h3>
-                    </div>
-                    <div id="recipe-list" class="space-y-3"></div>
-                </div>
-
-                <!-- CONTENT KHO NGUYÊN LIỆU -->
-                <div id="sec-kho-nl" class="space-y-3 hidden">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-brand-brown text-sm">Kho Nguyên Liệu Chế Biến</h3>
-                        <button onclick="openAddIngModal('nguyen_lieu')" class="bg-brand-brown text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-xs cursor-pointer">+ Nhập Kho NL</button>
-                    </div>
-                    <div id="ing-list-nl" class="space-y-2"></div>
-                </div>
-
-                <!-- CONTENT KHO BAO BÌ -->
-                <div id="sec-kho-bb" class="space-y-3 hidden">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-brand-brown text-sm">Kho Bao Bì & Vật Tư Đóng Gói</h3>
-                        <button onclick="openAddIngModal('bao_bi')" class="bg-brand-brown text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-xs cursor-pointer">+ Nhập Kho Bao Bì</button>
-                    </div>
-                    <div id="ing-list-bb" class="space-y-2"></div>
-                </div>
-
-                <!-- CONTENT KHO KHUÔN BÁNH -->
-                <div id="sec-kho-kb" class="space-y-3 hidden">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-brand-brown text-sm">Kho Khuôn & Khay Nướng Bánh</h3>
-                        <button onclick="openAddIngModal('khuon_banh')" class="bg-brand-brown text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-xs cursor-pointer">+ Nhập Khuôn Bánh</button>
-                    </div>
-                    <div id="ing-list-kb" class="space-y-2"></div>
-                </div>
-
-                <!-- FLOW TAB 1: ĐƠN MỚI -->
-                <div id="sec-flow-1" class="space-y-3">
-                    <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-bell text-amber-600 mr-1.5"></i>Đơn Hàng Mới Nhận</h3>
-                    <div id="admin-orders-list-1" class="space-y-3"></div>
-                </div>
-
-                <!-- FLOW TAB 2: CHUẨN BỊ -->
-                <div id="sec-flow-2" class="space-y-3 hidden">
-                    <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-list-check text-amber-600 mr-1.5"></i>Chuẩn Bị & Bóc Tách Kho</h3>
-                    <div id="admin-orders-list-2" class="space-y-3"></div>
-                </div>
-
-                <!-- FLOW TAB 3: TIẾN HÀNH -->
-                <div id="sec-flow-3" class="space-y-3 hidden">
-                    <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-fire-burner text-amber-600 mr-1.5"></i>Tiến Hành Làm Bánh Tại Bếp</h3>
-                    <div id="admin-orders-list-3" class="space-y-3"></div>
-                </div>
-
-                <!-- FLOW TAB 4: GIAO HÀNG -->
-                <div id="sec-flow-4" class="space-y-3 hidden">
-                    <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-truck-fast text-emerald-600 mr-1.5"></i>Giao Bánh & Chỉ Đường Google Maps</h3>
-                    <div id="admin-orders-list-4" class="space-y-3"></div>
-                </div>
-
-                <!-- TAB CÀI ĐẶT -->
-                <div id="sec-settings" class="space-y-4 hidden">
-                    <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-sliders text-brand-gold mr-1.5"></i>Cài Đặt Cấu Hình Bếp</h3>
-                    <div class="bg-brand-card p-4 rounded-2xl border border-[#E8D3C3] space-y-3 text-xs shadow-xs">
-                        <div>
-                            <label class="font-bold text-brand-brown block mb-1">Mã PIN Quản Bếp Mới:</label>
-                            <input id="set-pin" type="text" maxlength="6" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl font-bold text-center tracking-widest text-brand-brown">
-                        </div>
-                        <div>
-                            <label class="font-bold text-brand-brown block mb-1">URL Mã QR Thanh Toán (Link ảnh):</label>
-                            <input id="set-qr" type="text" placeholder="https://... hoặc link VietQR" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl font-mono text-[11px]">
-                        </div>
-                        <div>
-                            <label class="font-bold text-brand-brown block mb-1">Lời Cảm Ơn Hiện Cho Khách:</label>
-                            <textarea id="set-thanks" rows="2" placeholder="Cảm ơn quý khách đã tin tưởng Bánh Ti Ù!" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl text-xs"></textarea>
-                        </div>
-                        <button onclick="saveKitchenSettings()" class="w-full bg-brand-brown text-white font-bold py-2.5 rounded-xl shadow-md cursor-pointer">
-                            ✓ Cập Nhật Cài Đặt Bếp
-                        </button>
-                    </div>
-
-                    <div class="bg-amber-50 p-4 rounded-2xl border border-amber-300 space-y-2 text-xs">
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-brand-brown"><i class="fa-solid fa-arrows-rotate text-amber-700 mr-1"></i> Phiên Bản Phần Mềm:</span>
-                            <span class="bg-amber-200 text-amber-900 font-extrabold px-2 py-0.5 rounded-full text-[10px]">v6.4 Bugfix & Robust Update</span>
-                        </div>
-                        <p class="text-[10px] text-slate-600">Bấm nút bên dưới để xóa bộ nhớ đệm và ép tải phiên bản tính năng mới nhất từ Server về máy.</p>
-                        <button id="btn-update-sw" onclick="triggerSoftwareUpdate()" class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-2.5 rounded-xl shadow-xs transition-all cursor-pointer">
-                            🔄 Kiểm Tra & Cập Nhật Phiên Bản Mới
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-
-        </main>
-    </div>
-
-    <script>
-        let supabaseClient = null;
-        let cart = [];
-        let globalRecipes = [];
-        let globalIngredients = [];
-        let globalOrders = [];
-        let isAdminAuthenticated = false;
-
-        window.onload = function() {
-            const savedUrl = localStorage.getItem('tiu_sp_url') || 'https://qprjaojhfleycsmpqsqj.supabase.co';
-            const savedKey = localStorage.getItem('tiu_sp_key') || 'sb_publishable_N4LTMGhskjGoY-EdzNk_Ag_UC3KCzPG';
-            const savedPin = localStorage.getItem('tiu_sp_pin') || '1234';
-            const savedQr = localStorage.getItem('tiu_sp_qr') || 'https://api.vietqr.io/image/970422-0904052347-compact.png';
-            const savedThanks = localStorage.getItem('tiu_sp_thanks') || 'Cảm ơn quý khách đã ủng hộ Tiệm Bánh Ti Ù! Chúc bạn có một ngày ngon miệng ❤️';
-
-            document.getElementById('cfg-url').value = savedUrl;
-            document.getElementById('cfg-key').value = savedKey;
-            document.getElementById('cfg-pin').value = savedPin;
-            document.getElementById('set-pin').value = savedPin;
-            document.getElementById('set-qr').value = savedQr;
-            document.getElementById('set-thanks').value = savedThanks;
-            document.getElementById('cust-qr-img').src = savedQr;
-            document.getElementById('cust-thanks-msg').innerText = `"${savedThanks}"`;
-
-            if(savedKey && savedUrl) {
-                initSupabase(savedUrl, savedKey);
-            }
+// LỖI SỐ 1 CỦA ANH HUY: dẫn đường bị dính tên khách.
+// Nguyên nhân: bản cũ nhét "Tên - Địa chỉ: xxx" chung vào cột customer_name.
+// Hàm này tách lại làm 2 phần sạch sẽ. Nếu sau này anh thêm cột
+// customer_address trong Supabase thì nó tự ưu tiên dùng cột đó.
+function splitCustomer(o) {
+    const rawName = o.customer_name || '';
+    if (o.customer_address) {
+        return { name: rawName.split(' - Địa chỉ:')[0].trim() || 'Khách vãng lai', address: o.customer_address };
+    }
+    if (rawName.includes('Địa chỉ:')) {
+        const parts = rawName.split('Địa chỉ:');
+        return {
+            name: parts[0].replace(/\s*-\s*$/, '').trim() || 'Khách vãng lai',
+            address: (parts[1] || '').trim()
         };
+    }
+    return { name: rawName.trim() || 'Khách vãng lai', address: '' };
+}
 
-        function saveConfig() {
-            const url = document.getElementById('cfg-url').value.trim();
-            const key = document.getElementById('cfg-key').value.trim();
-            const pin = document.getElementById('cfg-pin').value.trim();
+// CHỈ đưa địa chỉ vào Google Maps, không kèm tên.
+function gmapsUrl(addr) {
+    return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr || '');
+}
 
-            if(!url || !key || !pin) return alert("Vui lòng điền đủ thông tin!");
+/* Ghi dữ liệu "chịu lỗi thiếu cột".
+   Tại sao cần: Supabase trả lỗi kiểu "Could not find the 'customer_address'
+   column ... in the schema cache" nếu bảng chưa có cột đó. Thay vì app chết,
+   ta bỏ cột thiếu ra rồi ghi lại. Nhờ vậy file này chạy được với schema hiện
+   tại của anh, mà khi anh thêm cột mới cũng tự dùng luôn, không cần sửa code. */
+async function safeWrite(table, mode, payload, matchId) {
+    let p = Object.assign({}, payload);
+    for (let i = 0; i < 8; i++) {
+        let res;
+        if (mode === 'insert') res = await supabaseClient.from(table).insert(p).select().single();
+        else res = await supabaseClient.from(table).update(p).eq('id', matchId).select();
+        if (!res.error) return { data: res.data };
 
-            localStorage.setItem('tiu_sp_url', url);
-            localStorage.setItem('tiu_sp_key', key);
-            localStorage.setItem('tiu_sp_pin', pin);
+        const msg = res.error.message || '';
+        const m = msg.match(/'([a-zA-Z0-9_]+)' column/) || msg.match(/column "([a-zA-Z0-9_]+)"/);
+        const col = m ? m[1] : null;
+        if (col && Object.prototype.hasOwnProperty.call(p, col)) { delete p[col]; continue; }
+        return { error: res.error };
+    }
+    return { error: { message: 'Ghi dữ liệu thất bại sau nhiều lần thử.' } };
+}
 
-            initSupabase(url, key);
+/* --------------------------------------------------------------
+   DANH SÁCH ĐƠN VỊ TÍNH  (LỖI SỐ 2 - phần đơn vị)
+   Bản cũ chỉ khai báo đúng 4 <option> nên chọn gì cũng chỉ có 4.
+   Giờ chia nhóm optgroup cho dễ tìm trên điện thoại.
+   -------------------------------------------------------------- */
+const UNIT_GROUPS = {
+    'Khối lượng': ['gam', 'kg', 'lạng', 'mg', 'oz', 'lb'],
+    'Thể tích':   ['ml', 'lít', 'cc', 'muỗng cà phê', 'muỗng canh', 'chén'],
+    'Đếm cái':    ['cái', 'chiếc', 'quả', 'trái', 'ổ', 'cây', 'lát', 'bộ', 'cặp', 'đôi'],
+    'Đóng gói':   ['hộp', 'túi', 'gói', 'bịch', 'vỉ', 'khay', 'chai', 'lon', 'thùng', 'bao', 'cuộn', 'tờ', 'mét']
+};
+
+function buildUnitSelect(selectedUnit) {
+    const sel = document.getElementById('ing-unit');
+    let html = '';
+    let found = false;
+    for (const g in UNIT_GROUPS) {
+        html += `<optgroup label="${g}">`;
+        UNIT_GROUPS[g].forEach(u => {
+            if (u === selectedUnit) found = true;
+            html += `<option value="${u}">${u}</option>`;
+        });
+        html += `</optgroup>`;
+    }
+    // Nếu đơn vị cũ trong DB không nằm trong danh sách (ví dụ "quả" của bản cũ,
+    // hay đơn vị anh tự gõ tay), vẫn phải thêm vào để KHÔNG bị mất dữ liệu khi sửa.
+    if (selectedUnit && !found) html = `<optgroup label="Đang dùng"><option value="${esc(selectedUnit)}">${esc(selectedUnit)}</option></optgroup>` + html;
+    sel.innerHTML = html;
+    if (selectedUnit) sel.value = selectedUnit;
+}
+
+/* --------------------------------------------------------------
+   KHỞI ĐỘNG & CẤU HÌNH
+   -------------------------------------------------------------- */
+window.onload = function () {
+    const savedUrl = localStorage.getItem('tiu_sp_url') || DEFAULT_URL;
+    const savedKey = localStorage.getItem('tiu_sp_key') || DEFAULT_KEY;
+    const savedPin = localStorage.getItem('tiu_sp_pin') || '1234';
+    const savedQr = localStorage.getItem('tiu_sp_qr') || 'https://api.vietqr.io/image/970422-0904052347-compact.png';
+    const savedThanks = localStorage.getItem('tiu_sp_thanks') || 'Cảm ơn quý khách đã ủng hộ Tiệm Bánh Ti Ù! ❤️';
+
+    document.getElementById('set-pin').value = savedPin;
+    document.getElementById('set-qr').value = savedQr;
+    document.getElementById('set-thanks').value = savedThanks;
+    document.getElementById('cust-qr-img').src = savedQr;
+    document.getElementById('cust-thanks-msg').innerText = '"' + savedThanks + '"';
+
+    buildUnitSelect('gam');
+
+    // Có sẵn cấu hình thì vào thẳng app, KHÔNG bung modal chứa key ra màn hình.
+    if (savedUrl && savedKey) initSupabase(savedUrl, savedKey);
+    else openConfigModal();
+};
+
+function openConfigModal() {
+    document.getElementById('cfg-url').value = localStorage.getItem('tiu_sp_url') || DEFAULT_URL;
+    document.getElementById('cfg-key').value = localStorage.getItem('tiu_sp_key') || DEFAULT_KEY;
+    document.getElementById('cfg-pin').value = localStorage.getItem('tiu_sp_pin') || '1234';
+    document.getElementById('cfg-close-btn').classList.toggle('hidden', !supabaseClient);
+    document.getElementById('config-modal').classList.remove('hidden');
+}
+function closeConfigModal() { document.getElementById('config-modal').classList.add('hidden'); }
+
+function toggleKeyVisible() {
+    const inp = document.getElementById('cfg-key');
+    const eye = document.getElementById('cfg-key-eye');
+    const showing = inp.type === 'text';
+    inp.type = showing ? 'password' : 'text';
+    eye.className = showing ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+}
+
+function saveConfig() {
+    const url = document.getElementById('cfg-url').value.trim();
+    const key = document.getElementById('cfg-key').value.trim();
+    const pin = document.getElementById('cfg-pin').value.trim();
+    if (!url || !key || !pin) return alert("Vui lòng điền đủ thông tin!");
+    localStorage.setItem('tiu_sp_url', url);
+    localStorage.setItem('tiu_sp_key', key);
+    localStorage.setItem('tiu_sp_pin', pin);
+    document.getElementById('set-pin').value = pin;
+    closeConfigModal();
+    initSupabase(url, key);
+}
+
+function saveKitchenSettings() {
+    const pin = document.getElementById('set-pin').value.trim();
+    const qr = document.getElementById('set-qr').value.trim();
+    const thanks = document.getElementById('set-thanks').value.trim();
+    if (!pin) return alert("Vui lòng nhập Mã PIN!");
+    localStorage.setItem('tiu_sp_pin', pin);
+    localStorage.setItem('tiu_sp_qr', qr);
+    localStorage.setItem('tiu_sp_thanks', thanks);
+    document.getElementById('cust-qr-img').src = qr;
+    document.getElementById('cust-thanks-msg').innerText = '"' + thanks + '"';
+    alert("✅ Đã lưu cài đặt Bếp!");
+}
+
+async function triggerSoftwareUpdate() {
+    try {
+        if ('caches' in window) { const keys = await caches.keys(); await Promise.all(keys.map(k => caches.delete(k))); }
+        if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const r of regs) await r.unregister();
         }
+    } catch (e) { console.log("Cache:", e); }
+    window.location.reload(true);
+}
 
-        function saveKitchenSettings() {
-            const pin = document.getElementById('set-pin').value.trim();
-            const qr = document.getElementById('set-qr').value.trim();
-            const thanks = document.getElementById('set-thanks').value.trim();
+function initSupabase(url, key) {
+    try {
+        supabaseClient = supabase.createClient(url, key);
+        document.getElementById('config-modal').classList.add('hidden');
+        document.getElementById('app-container').classList.remove('hidden');
+        loadDataFromCloud();
+        setupRealtimeListener();
+    } catch (e) { alert("Lỗi kết nối Supabase: " + e.message); }
+}
 
-            if(!pin) return alert("Vui lòng nhập Mã PIN!");
+async function loadDataFromCloud() {
+    if (!supabaseClient) return;
+    try {
+        const ing = await supabaseClient.from('ingredients').select('*').order('name');
+        if (ing.error) console.error('Lỗi tải kho:', ing.error.message);
+        globalIngredients = ing.data || [];
 
-            localStorage.setItem('tiu_sp_pin', pin);
-            localStorage.setItem('tiu_sp_qr', qr);
-            localStorage.setItem('tiu_sp_thanks', thanks);
+        const rec = await supabaseClient.from('recipes').select('*, recipe_items(*, ingredients(*))');
+        if (rec.error) console.error('Lỗi tải công thức:', rec.error.message);
+        globalRecipes = rec.data || [];
 
-            document.getElementById('cust-qr-img').src = qr;
-            document.getElementById('cust-thanks-msg').innerText = `"${thanks}"`;
+        renderUserCakes();
+        renderAllStockTabs();
+        renderRecipes();
+        renderAdminMenuItems();
+        await loadAdminOrders();
+    } catch (err) { console.error("Lỗi nạp dữ liệu Cloud:", err); }
+}
 
-            alert("✅ Đã lưu cài đặt Bếp thành công!");
-        }
-
-        // HÀM CẬP NHẬT PHẦN MỀM ĐÃ ĐƯỢC FIX LỖI TƯƠNG TÁC
-        async function triggerSoftwareUpdate() {
-            try {
-                if ('caches' in window) {
-                    const keys = await caches.keys();
-                    await Promise.all(keys.map(k => caches.delete(k)));
-                }
-                if ('serviceWorker' in navigator) {
-                    const registrations = await navigator.serviceWorker.getRegistrations();
-                    for (let reg of registrations) {
-                        await reg.unregister();
-                    }
-                }
-            } catch(e) {
-                console.log("Xóa cache:", e);
+function setupRealtimeListener() {
+    if (!supabaseClient) return;
+    supabaseClient.channel('realtime-sync')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, payload => {
+            if (isAdminAuthenticated) {
+                const c = splitCustomer(payload.new);
+                alert('🔔 CÓ ĐƠN MỚI từ: ' + c.name);
             }
-            alert("🚀 Đang làm mới ứng dụng...");
-            window.location.reload(true);
-        }
-
-        function initSupabase(url, key) {
-            try {
-                supabaseClient = supabase.createClient(url, key);
-                document.getElementById('config-modal').classList.add('hidden');
-                document.getElementById('app-container').classList.remove('hidden');
-                loadDataFromCloud();
-                setupRealtimeListener();
-            } catch(e) {
-                alert("Lỗi kết nối Supabase: " + e.message);
-            }
-        }
-
-        async function loadDataFromCloud() {
-            if(!supabaseClient) return;
-
-            try {
-                const { data: ingData } = await supabaseClient.from('ingredients').select('*');
-                if(ingData) globalIngredients = ingData;
-
-                const { data: recData } = await supabaseClient.from('recipes').select('*, recipe_items(*, ingredients(*))');
-                if(recData) globalRecipes = recData;
-
-                renderUserCakes();
-                renderAllStockTabs();
-                renderRecipes();
-                renderAdminMenuItems();
-                loadAdminOrders();
-            } catch (err) {
-                console.error("Lỗi nạp dữ liệu Cloud:", err);
-            }
-        }
-
-        function setupRealtimeListener() {
-            if(!supabaseClient) return;
-            supabaseClient.channel('realtime-sync')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, payload => {
-                    if(isAdminAuthenticated) {
-                        alert(`🔔 CÓ ĐƠN HÀNG MỚI từ: ${payload.new.customer_name || 'Khách vãng lai'}!`);
-                    }
-                    loadAdminOrders();
-                })
-                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'recipes' }, () => {
-                    loadDataFromCloud();
-                })
-                .subscribe();
-        }
-
-        // HÀM QUẢN LÝ GIỎ HÀNG BỔ SUNG FIX DẤU +
-        function addToCart(recipeId) {
-            const rec = globalRecipes.find(r => r.id === recipeId);
-            if(!rec) return;
-
-            const existing = cart.find(item => item.recipeId === recipeId);
-            if(existing) {
-                existing.qty += 1;
-            } else {
-                cart.push({
-                    recipeId: rec.id,
-                    name: rec.name,
-                    price: rec.selling_price || 0,
-                    qty: 1
-                });
-            }
-            renderCartUI();
-        }
-
-        function renderCartUI() {
-            const container = document.getElementById('cart-items-container');
-            const totalEl = document.getElementById('cart-total-price');
-            const badgeEl = document.getElementById('cart-qty-badge');
-
-            if(cart.length === 0) {
-                container.innerHTML = 'Chưa chọn bánh nào.';
-                totalEl.innerText = '0đ';
-                badgeEl.innerText = '0 món';
-                return;
-            }
-
-            let total = 0;
-            let totalQty = 0;
-
-            container.innerHTML = cart.map((item, idx) => {
-                const sum = item.price * item.qty;
-                total += sum;
-                totalQty += item.qty;
-
-                return `
-                    <div class="flex justify-between items-center bg-[#F9EFE4] p-2 rounded-xl text-xs">
-                        <span class="font-bold text-brand-brown">${item.name}</span>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="updateCartQty(${idx}, -1)" class="w-5 h-5 bg-amber-200 text-brand-brown font-bold rounded flex items-center justify-center">-</button>
-                            <span class="font-bold text-brand-brown">${item.qty}</span>
-                            <button onclick="updateCartQty(${idx}, 1)" class="w-5 h-5 bg-brand-brown text-white font-bold rounded flex items-center justify-center">+</button>
-                            <span class="font-bold text-brand-brown min-w-[50px] text-right">${sum.toLocaleString('vi-VN')}đ</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            totalEl.innerText = `${total.toLocaleString('vi-VN')}đ`;
-            badgeEl.innerText = `${totalQty} món`;
-        }
-
-        function updateCartQty(index, change) {
-            cart[index].qty += change;
-            if(cart[index].qty <= 0) cart.splice(index, 1);
-            renderCartUI();
-        }
-
-        function renderUserCakes() {
-            const list = document.getElementById('user-cake-list');
-            if(!list) return;
-
-            const publicCakes = globalRecipes.filter(r => r.selling_price && r.selling_price > 0);
-
-            if(publicCakes.length === 0) {
-                list.innerHTML = `<div class="col-span-2 text-xs text-slate-400 text-center py-8">Hôm nay Bếp chưa trưng món lên Menu!</div>`;
-                return;
-            }
-
-            list.innerHTML = publicCakes.map(r => {
-                const imgUrl = r.image_url && r.image_url.trim() !== '' ? r.image_url : 'logo.jpg';
-                return `
-                    <div class="bg-brand-card p-3 rounded-2xl border border-[#E8D3C3] shadow-xs flex flex-col justify-between">
-                        <div>
-                            <div class="h-28 bg-[#F9EFE4] rounded-xl mb-2 overflow-hidden border border-[#E8D3C3]/50">
-                                <img src="${imgUrl}" alt="${r.name}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='logo.jpg';">
-                            </div>
-                            <h4 class="font-bold text-brand-brown text-xs">${r.name}</h4>
-                            <p class="text-[10px] text-slate-500 line-clamp-1 mt-0.5">${r.description || ''}</p>
-                        </div>
-                        <div class="mt-2 flex justify-between items-center">
-                            <span class="font-extrabold text-brand-brown text-xs">${r.selling_price ? r.selling_price.toLocaleString('vi-VN') : 0}đ</span>
-                            <button onclick="addToCart(${r.id})" class="bg-brand-brown hover:bg-[#4A2B18] text-white w-7 h-7 rounded-lg text-xs font-bold cursor-pointer">+</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function switchAdminTab(targetTab) {
-            const secs = ['add-menu', 'customers', 'recipe', 'kho-nl', 'kho-bb', 'kho-kb', 'flow-1', 'flow-2', 'flow-3', 'flow-4', 'settings'];
-            
-            secs.forEach(s => {
-                const el = document.getElementById(`sec-${s}`);
-                if(el) el.classList.add('hidden');
-            });
-
-            document.querySelectorAll('.admin-tab-btn').forEach(btn => {
-                btn.className = "admin-tab-btn py-2 rounded-xl text-brand-brown hover:bg-white/50 transition-all font-medium relative cursor-pointer";
-            });
-
-            const activeBtn = document.getElementById(`nav-${targetTab}`);
-            if(activeBtn) {
-                activeBtn.className = "admin-tab-btn py-2 rounded-xl bg-brand-brown text-white font-extrabold shadow-md border border-amber-300 relative scale-[1.02] transition-all cursor-pointer";
-            }
-
-            const targetEl = document.getElementById(`sec-${targetTab}`);
-            if(targetEl) targetEl.classList.remove('hidden');
-
-            if(targetTab === 'customers') renderCustomerCRM();
-            if(targetTab === 'add-menu') renderAdminMenuItems();
-        }
-
-        function renderAdminMenuItems() {
-            const container = document.getElementById('admin-menu-items-list');
-            if(!container) return;
-
-            if(globalRecipes.length === 0) {
-                container.innerHTML = `<div class="text-xs text-slate-400 italic text-center py-6">Chưa có công thức món nào trong Bếp!</div>`;
-                return;
-            }
-
-            container.innerHTML = globalRecipes.map(r => {
-                const isOnSale = r.selling_price && r.selling_price > 0;
-                const imgUrl = r.image_url && r.image_url.trim() !== '' ? r.image_url : 'logo.jpg';
-
-                return `
-                    <div class="bg-brand-card p-3 rounded-2xl border border-[#E8D3C3] shadow-xs flex items-center justify-between text-xs">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-12 h-12 rounded-xl overflow-hidden border border-[#E8D3C3] bg-[#F9EFE4] flex-shrink-0">
-                                <img src="${imgUrl}" alt="${r.name}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='logo.jpg';">
-                            </div>
-                            <div>
-                                <div class="font-bold text-brand-brown">${r.name}</div>
-                                <div class="text-[10px] text-slate-500">Giá bán: ${r.selling_price ? r.selling_price.toLocaleString('vi-VN') : 0}đ</div>
-                                <span class="text-[9px] px-2 py-0.5 rounded-full font-bold ${isOnSale ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}">
-                                    ${isOnSale ? '● Đang Hiện Menu Khách' : '○ Tạm Ngưng Bán'}
-                                </span>
-                            </div>
-                        </div>
-                        <button onclick="openAddMenuItemModal(${r.id})" class="bg-brand-brown text-white text-[11px] font-bold px-3 py-1.5 rounded-xl shadow-xs cursor-pointer">
-                            ⚙️ Cấu Hình
-                        </button>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderCustomerCRM() {
-            const container = document.getElementById('crm-customer-list');
-            if(!container) return;
-
-            if(globalOrders.length === 0) {
-                container.innerHTML = `<div class="text-xs text-slate-400 italic text-center py-6">Chưa có dữ liệu đơn hàng để thống kê khách!</div>`;
-                return;
-            }
-
-            let customerMap = {};
-
-            globalOrders.forEach(o => {
-                const phone = o.customer_phone ? o.customer_phone.trim() : 'N/A';
-                if(phone === 'N/A') return;
-
-                if(!customerMap[phone]) {
-                    customerMap[phone] = {
-                        phone: phone,
-                        name: o.customer_name || 'Khách vãng lai',
-                        totalSpent: 0,
-                        orderCount: 0,
-                        addresses: new Set()
-                    };
-                }
-
-                customerMap[phone].totalSpent += (o.total_amount || 0);
-                customerMap[phone].orderCount += 1;
-                
-                if(o.customer_name && o.customer_name.includes('Địa chỉ:')) {
-                    const addrPart = o.customer_name.split('Địa chỉ:')[1];
-                    if(addrPart) customerMap[phone].addresses.add(addrPart.trim());
-                }
-            });
-
-            const customerList = Object.values(customerMap).sort((a, b) => b.orderCount - a.orderCount);
-
-            container.innerHTML = customerList.map(c => {
-                let stars = '⭐';
-                let rankName = '🥉 Khách Mới';
-                let rankBadgeClass = 'bg-amber-100 text-amber-900 border-amber-300';
-
-                if(c.orderCount >= 10) {
-                    stars = '⭐⭐⭐⭐⭐';
-                    rankName = '💎 Khách Siêu VIP';
-                    rankBadgeClass = 'bg-purple-100 text-purple-900 border-purple-300 font-extrabold';
-                } else if(c.orderCount >= 5) {
-                    stars = '⭐⭐⭐⭐';
-                    rankName = '🥇 Khách VIP';
-                    rankBadgeClass = 'bg-amber-200 text-amber-950 border-amber-400 font-bold';
-                } else if(c.orderCount >= 2) {
-                    stars = '⭐⭐';
-                    rankName = '🥈 Khách Thân Thiết';
-                    rankBadgeClass = 'bg-slate-200 text-slate-800 border-slate-300';
-                }
-
-                const mainName = c.name.split(' - Địa chỉ:')[0];
-                const lastAddr = Array.from(c.addresses).pop() || 'Chưa lưu địa chỉ';
-                const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lastAddr)}`;
-
-                return `
-                    <div class="bg-brand-card p-3.5 rounded-2xl border border-[#E8D3C3] shadow-xs space-y-2 text-xs">
-                        <div class="flex justify-between items-center border-b border-[#E8D3C3]/60 pb-1.5">
-                            <div>
-                                <span class="font-extrabold text-brand-brown text-sm">${mainName}</span>
-                                <span class="text-[11px] text-slate-600 font-bold block">📞 ${c.phone}</span>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-[10px] px-2 py-0.5 rounded-full border ${rankBadgeClass}">${rankName}</span>
-                                <div class="text-[10px] mt-0.5">${stars}</div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2 bg-[#F9EFE4] p-2 rounded-xl text-[11px] text-center border border-[#E8D3C3]/50">
-                            <div>
-                                <span class="text-slate-500 block text-[10px]">Đã mua:</span>
-                                <b class="text-brand-brown text-xs">${c.orderCount} lượt bánh</b>
-                            </div>
-                            <div>
-                                <span class="text-slate-500 block text-[10px]">Tổng chi tiêu:</span>
-                                <b class="text-emerald-700 text-xs">${c.totalSpent.toLocaleString('vi-VN')}đ</b>
-                            </div>
-                        </div>
-
-                        <div class="text-[10px] text-slate-500 truncate">
-                            <b>📍 Địa chỉ gần nhất:</b> ${lastAddr}
-                        </div>
-
-                        <div class="flex space-x-2 pt-1">
-                            <a href="tel:${c.phone}" class="w-1/2 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold py-1.5 rounded-xl text-center text-[11px] border border-amber-300">
-                                📞 Gọi Điện
-                            </a>
-                            <a href="${gmapsUrl}" target="_blank" class="w-1/2 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold py-1.5 rounded-xl text-center text-[11px] border border-emerald-300">
-                                🗺️ Dẫn Đường
-                            </a>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderAllStockTabs() {
-            const nlList = document.getElementById('ing-list-nl');
-            const bbList = document.getElementById('ing-list-bb');
-            const kbList = document.getElementById('ing-list-kb');
-
-            const nlItems = globalIngredients.filter(i => !i.category || i.category === 'nguyen_lieu');
-            const bbItems = globalIngredients.filter(i => i.category === 'bao_bi');
-            const kbItems = globalIngredients.filter(i => i.category === 'khuon_banh');
-
-            if(nlList) nlList.innerHTML = renderStockCategory(nlItems);
-            if(bbList) bbList.innerHTML = renderStockCategory(bbItems);
-            if(kbList) kbList.innerHTML = renderStockCategory(kbItems);
-        }
-
-        function renderStockCategory(items) {
-            if(items.length === 0) return `<div class="text-xs text-slate-400 italic text-center py-4">Chưa có dữ liệu trong kho này</div>`;
-            
-            const today = new Date();
-            today.setHours(0,0,0,0);
-
-            return items.map(ing => {
-                const img = ing.image_url && ing.image_url.trim() !== '' ? ing.image_url : 'logo.jpg';
-                
-                let expiryBadge = '';
-                if (ing.expiry_date) {
-                    const expDate = new Date(ing.expiry_date);
-                    expDate.setHours(0,0,0,0);
-                    const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
-
-                    if (diffDays < 0) {
-                        expiryBadge = `<span class="bg-rose-100 text-rose-700 font-bold text-[9px] px-1.5 py-0.5 rounded-md border border-rose-200">🚨 Đã Hết Hạn!</span>`;
-                    } else if (diffDays <= 7) {
-                        expiryBadge = `<span class="bg-amber-100 text-amber-800 font-bold text-[9px] px-1.5 py-0.5 rounded-md border border-amber-300">⚠️ Cận Date (còn ${diffDays} ngày)</span>`;
-                    } else {
-                        expiryBadge = `<span class="text-slate-400 text-[10px]">HSD: ${ing.expiry_date}</span>`;
-                    }
-                }
-
-                return `
-                    <div onclick="openAddIngModal(null, ${ing.id})" class="bg-brand-card hover:bg-amber-50/50 cursor-pointer transition-all p-2.5 rounded-2xl border border-[#E8D3C3] flex items-center justify-between text-xs shadow-xs">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-12 h-12 rounded-xl overflow-hidden border border-[#E8D3C3] bg-[#F9EFE4] flex-shrink-0">
-                                <img src="${img}" alt="${ing.name}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='logo.jpg';">
-                            </div>
-                            <div>
-                                <div class="font-bold text-brand-brown">${ing.name}</div>
-                                <div class="text-[10px] text-slate-500">Đơn giá: ${(ing.total_price / (ing.stock_qty||1)).toFixed(0)}đ/${ing.unit}</div>
-                                <div class="mt-0.5">${expiryBadge}</div>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <span class="font-extrabold text-brand-brown text-sm">${ing.stock_qty} ${ing.unit}</span>
-                            <div class="text-[10px] text-slate-400">Tồn kho</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function openAddIngModal(catDefault = 'nguyen_lieu', ingId = null) {
-            document.getElementById('ing-category').value = catDefault;
-            if(ingId) {
-                const ing = globalIngredients.find(i => i.id === ingId);
-                if(ing) {
-                    document.getElementById('ing-modal-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-brand-gold mr-1.5"></i>Chỉnh Sửa Vật Tư Kho`;
-                    document.getElementById('ing-id-hidden').value = ing.id;
-                    document.getElementById('ing-category').value = ing.category || 'nguyen_lieu';
-                    document.getElementById('ing-name').value = ing.name;
-                    document.getElementById('ing-image').value = ing.image_url || '';
-                    document.getElementById('ing-qty').value = ing.stock_qty;
-                    document.getElementById('ing-unit').value = ing.unit;
-                    document.getElementById('ing-price').value = ing.total_price;
-                    document.getElementById('ing-expiry').value = ing.expiry_date || '';
-
-                    document.getElementById('btn-del-ing').classList.remove('hidden');
-                    document.getElementById('btn-save-ing').className = "w-2/3 bg-brand-brown text-white font-bold py-3 rounded-xl text-xs shadow-md cursor-pointer";
-                }
-            } else {
-                document.getElementById('ing-modal-title').innerHTML = `<i class="fa-solid fa-boxes-packing text-brand-gold mr-1.5"></i>Nhập Kho Mới`;
-                document.getElementById('ing-id-hidden').value = '';
-                document.getElementById('ing-name').value = '';
-                document.getElementById('ing-image').value = '';
-                document.getElementById('ing-qty').value = '';
-                document.getElementById('ing-price').value = '';
-                document.getElementById('ing-expiry').value = '';
-
-                document.getElementById('btn-del-ing').classList.add('hidden');
-                document.getElementById('btn-save-ing').className = "w-full bg-brand-brown text-white font-bold py-3 rounded-xl text-xs shadow-md cursor-pointer";
-            }
-            document.getElementById('add-ing-modal').classList.remove('hidden');
-        }
-
-        function closeAddIngModal() { document.getElementById('add-ing-modal').classList.add('hidden'); }
-
-        async function saveIngredient() {
-            const ingId = document.getElementById('ing-id-hidden').value;
-            const category = document.getElementById('ing-category').value;
-            const name = document.getElementById('ing-name').value.trim();
-            const image_url = document.getElementById('ing-image').value.trim();
-            const qty = parseFloat(document.getElementById('ing-qty').value) || 0;
-            const unit = document.getElementById('ing-unit').value;
-            const price = parseFloat(document.getElementById('ing-price').value) || 0;
-            const expiry = document.getElementById('ing-expiry').value || '';
-
-            if(!name) return alert("Vui lòng nhập tên vật tư/nguyên liệu!");
-
-            const payload = { category, name, image_url, stock_qty: qty, unit, total_price: price, expiry_date: expiry };
-
-            if(ingId) {
-                await supabaseClient.from('ingredients').update(payload).eq('id', ingId);
-            } else {
-                await supabaseClient.from('ingredients').insert([payload]);
-            }
-
-            closeAddIngModal();
-            loadDataFromCloud();
-        }
-
-        async function deleteIngredient() {
-            const ingId = document.getElementById('ing-id-hidden').value;
-            if(!ingId) return;
-
-            if(confirm("Bạn có chắc chắn muốn xóa vật tư này khỏi Kho không?")) {
-                const { error } = await supabaseClient.from('ingredients').delete().eq('id', ingId);
-                if(error) return alert("Lỗi không thể xóa: " + error.message);
-
-                alert("🗑️ Đã xóa vật tư thành công!");
-                closeAddIngModal();
-                loadDataFromCloud();
-            }
-        }
-
-        function openAddMenuItemModal(recipeId = null) {
-            const select = document.getElementById('menu-recipe-select');
-            select.innerHTML = globalRecipes.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
-
-            if(recipeId) {
-                const rec = globalRecipes.find(r => r.id === recipeId);
-                if(rec) {
-                    select.value = rec.id;
-                    document.getElementById('menu-item-price').value = rec.selling_price || '';
-                    document.getElementById('menu-item-image').value = rec.image_url || '';
-                    document.getElementById('menu-item-desc').value = rec.description || '';
-                }
-            }
-            document.getElementById('add-menu-item-modal').classList.remove('hidden');
-        }
-
-        function closeAddMenuItemModal() { document.getElementById('add-menu-item-modal').classList.add('hidden'); }
-
-        async function saveMenuItemToPublic() {
-            const recipeId = document.getElementById('menu-recipe-select').value;
-            const price = parseFloat(document.getElementById('menu-item-price').value) || 0;
-            const image_url = document.getElementById('menu-item-image').value.trim();
-            const desc = document.getElementById('menu-item-desc').value.trim();
-
-            if(!recipeId || price <= 0) return alert("Vui lòng chọn công thức và điền giá bán!");
-
-            await supabaseClient.from('recipes').update({
-                selling_price: price,
-                image_url: image_url,
-                description: desc
-            }).eq('id', recipeId);
-
-            alert("✅ Đã cập nhật trạng thái BẬT BÁN trên Menu Khách!");
-            closeAddMenuItemModal();
-            loadDataFromCloud();
-        }
-
-        async function removeMenuItemFromPublic() {
-            const recipeId = document.getElementById('menu-recipe-select').value;
-            if(!recipeId) return;
-
-            if(confirm("Bạn có muốn tạm ngưng bán món này trên Menu Khách Hàng?")) {
-                await supabaseClient.from('recipes').update({ selling_price: 0 }).eq('id', recipeId);
-                alert("🗑️ Đã chuyển món sang trạng thái TẠM NGƯNG BÁN!");
-                closeAddMenuItemModal();
-                loadDataFromCloud();
-            }
-        }
-
-        async function loadAdminOrders() {
-            if(!supabaseClient) return;
-            const { data: orders } = await supabaseClient.from('orders').select('*, order_items(*, recipes(*, recipe_items(*, ingredients(*))))').order('created_at', { ascending: false });
-            if(!orders) return;
-
-            globalOrders = orders;
-            const pendingOrders = orders.filter(o => o.status === 'pending');
-            const prepOrders = orders.filter(o => o.status === 'prep');
-            const cookingOrders = orders.filter(o => o.status === 'cooking');
-            const deliveryOrders = orders.filter(o => o.status === 'delivering');
-
-            renderFlow1(pendingOrders);
-            renderFlow2(prepOrders);
-            renderFlow3(cookingOrders);
-            renderFlow4(deliveryOrders);
-        }
-
-        function renderFlow1(orders) {
-            const container = document.getElementById('admin-orders-list-1');
-            if(!container) return;
-            if(orders.length === 0) {
-                container.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Không có đơn mới nào!</div>`;
-                return;
-            }
-
-            container.innerHTML = orders.map(o => `
-                <div class="bg-brand-card p-3.5 rounded-2xl border border-amber-400 bg-amber-50/40 shadow-xs space-y-2 text-xs">
-                    <div class="flex justify-between items-center border-b border-[#E8D3C3]/60 pb-1.5">
-                        <div>
-                            <span class="font-bold text-brand-brown">${o.customer_name}</span>
-                            <span class="text-[10px] text-slate-500 block">📞 ${o.customer_phone}</span>
-                        </div>
-                        <span class="font-bold text-amber-800 text-[11px] bg-amber-200 px-2 py-0.5 rounded-full">⏳ Đơn Mới</span>
-                    </div>
-                    <div class="flex justify-between items-center pt-2 border-t border-[#E8D3C3]/60 text-xs">
-                        <span class="font-bold text-brand-brown">Tổng: ${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0}đ</span>
-                        <button onclick="updateOrderStatus(${o.id}, 'prep')" class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs cursor-pointer">
-                            Xác Nhận Đơn → Chuẩn Bị
-                        </button>
-                    </div>
+            loadAdminOrders();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'recipes' }, () => loadDataFromCloud())
+        .subscribe();
+}
+
+/* --------------------------------------------------------------
+   GIỎ HÀNG (phía khách)
+   -------------------------------------------------------------- */
+function addToCart(recipeId) {
+    const rec = globalRecipes.find(r => r.id === recipeId);
+    if (!rec) return;
+    const existing = cart.find(i => i.recipeId === recipeId);
+    if (existing) existing.qty += 1;
+    else cart.push({ recipeId: rec.id, name: rec.name, price: Math.abs(rec.selling_price || 0), qty: 1 });
+    renderCartUI();
+}
+
+function renderCartUI() {
+    const container = document.getElementById('cart-items-container');
+    const totalEl = document.getElementById('cart-total-price');
+    const badgeEl = document.getElementById('cart-qty-badge');
+    if (cart.length === 0) {
+        container.innerHTML = 'Chưa chọn bánh nào.';
+        totalEl.innerText = '0đ'; badgeEl.innerText = '0 món'; return;
+    }
+    let total = 0, totalQty = 0;
+    container.innerHTML = cart.map((item, idx) => {
+        const sum = item.price * item.qty; total += sum; totalQty += item.qty;
+        return `<div class="flex justify-between items-center bg-[#F9EFE4] p-2 rounded-xl text-xs">
+            <span class="font-bold text-brand-brown flex-1 truncate pr-2">${esc(item.name)}</span>
+            <div class="flex items-center space-x-2">
+                <button onclick="updateCartQty(${idx},-1)" class="w-6 h-6 bg-amber-200 text-brand-brown font-bold rounded">-</button>
+                <span class="font-bold text-brand-brown w-4 text-center">${item.qty}</span>
+                <button onclick="updateCartQty(${idx},1)" class="w-6 h-6 bg-brand-brown text-white font-bold rounded">+</button>
+                <span class="font-bold text-brand-brown min-w-[56px] text-right">${money(sum)}</span>
+            </div></div>`;
+    }).join('');
+    totalEl.innerText = money(total);
+    badgeEl.innerText = totalQty + ' món';
+}
+
+function updateCartQty(index, change) {
+    cart[index].qty += change;
+    if (cart[index].qty <= 0) cart.splice(index, 1);
+    renderCartUI();
+}
+
+function renderUserCakes() {
+    const list = document.getElementById('user-cake-list');
+    if (!list) return;
+    // Món đang bán = selling_price > 0. Món tạm ngưng lưu giá ÂM (xem giải thích
+    // ở hàm removeMenuItemFromPublic) nên tự động không lọt vào đây.
+    const publicCakes = globalRecipes.filter(r => (r.selling_price || 0) > 0);
+    if (publicCakes.length === 0) {
+        list.innerHTML = `<div class="col-span-2 text-xs text-slate-400 text-center py-8">Hôm nay Bếp chưa trưng món lên Menu!</div>`;
+        return;
+    }
+    list.innerHTML = publicCakes.map(r => {
+        const img = r.image_url && r.image_url.trim() ? esc(r.image_url) : 'logo.jpg';
+        return `<div class="bg-brand-card p-3 rounded-2xl border border-[#E8D3C3] flex flex-col justify-between">
+            <div>
+                <div class="h-28 bg-[#F9EFE4] rounded-xl mb-2 overflow-hidden border border-[#E8D3C3]/50">
+                    <img src="${img}" alt="${esc(r.name)}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='logo.jpg';">
                 </div>
-            `).join('');
-        }
+                <h4 class="font-bold text-brand-brown text-xs">${esc(r.name)}</h4>
+                <p class="text-[10px] text-slate-500 line-clamp-1 mt-0.5">${esc(r.description || '')}</p>
+            </div>
+            <div class="mt-2 flex justify-between items-center">
+                <span class="font-extrabold text-brand-brown text-xs">${money(r.selling_price)}</span>
+                <button onclick="addToCart(${r.id})" class="bg-brand-brown text-white w-7 h-7 rounded-lg text-xs font-bold">+</button>
+            </div></div>`;
+    }).join('');
+}
 
-        function renderFlow2(orders) {
-            const container = document.getElementById('admin-orders-list-2');
-            if(!container) return;
-            if(orders.length === 0) {
-                container.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Không có đơn nào cần chuẩn bị!</div>`;
-                return;
-            }
+/* --------------------------------------------------------------
+   ĐIỀU HƯỚNG TAB BẾP
+   -------------------------------------------------------------- */
+function switchAdminTab(targetTab) {
+    currentAdminTab = targetTab;
+    const secs = ['add-menu','customers','recipe','kho-nl','kho-bb','kho-kb','flow-1','flow-2','flow-3','flow-4','settings'];
+    secs.forEach(s => { const el = document.getElementById('sec-' + s); if (el) el.classList.add('hidden'); });
 
-            container.innerHTML = orders.map(o => `
-                <div class="bg-brand-card p-3.5 rounded-2xl border border-amber-300 shadow-xs space-y-2 text-xs">
-                    <div class="flex justify-between items-center border-b border-[#E8D3C3]/60 pb-1.5">
-                        <div>
-                            <span class="font-bold text-brand-brown">${o.customer_name}</span>
-                            <span class="text-[10px] text-slate-500 block">📞 ${o.customer_phone}</span>
-                        </div>
-                        <span class="font-bold text-amber-800 text-[11px]">📋 Đang Chuẩn Bị</span>
-                    </div>
-                    <div class="flex justify-between items-center pt-1 border-t border-[#E8D3C3]/60 text-xs">
-                        <span class="font-bold text-brand-brown">Tổng: ${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0}đ</span>
-                        <button onclick="updateOrderStatus(${o.id}, 'cooking')" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs cursor-pointer">
-                            ✓ Đã Duyệt Kho → Tiến Hành
-                        </button>
-                    </div>
+    document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+        btn.className = "admin-tab-btn py-2 rounded-xl text-brand-brown relative transition-all";
+    });
+    const activeBtn = document.getElementById('nav-' + targetTab);
+    if (activeBtn) activeBtn.className = "admin-tab-btn py-2 rounded-xl bg-brand-brown text-white font-extrabold shadow-md relative transition-all";
+
+    const targetEl = document.getElementById('sec-' + targetTab);
+    if (targetEl) targetEl.classList.remove('hidden');
+
+    if (targetTab === 'customers') renderCustomerCRM();
+    if (targetTab === 'add-menu') renderAdminMenuItems();
+    if (targetTab === 'recipe') renderRecipes();
+}
+
+/* --------------------------------------------------------------
+   TAB + MÓN  (LỖI SỐ 5: tạm ngưng rồi không bật lại được)
+
+   Gốc rễ: bản cũ tạm ngưng bằng cách ghi selling_price = 0 -> GIÁ CŨ MẤT LUÔN.
+   Khi mở lại, ô giá trống nên hàm lưu chặn ngay bằng alert "điền giá bán".
+   Cách xử lý ở v7.0: tạm ngưng thì lưu giá dạng SỐ ÂM (-85000).
+   Menu khách vẫn lọc > 0 nên khách không thấy, còn Bếp vẫn giữ nguyên giá
+   để bật lại chỉ 1 chạm. Không cần thêm cột mới vào Supabase.
+   -------------------------------------------------------------- */
+function renderAdminMenuItems() {
+    const container = document.getElementById('admin-menu-items-list');
+    if (!container) return;
+    if (globalRecipes.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-400 italic text-center py-6">Chưa có công thức nào. Qua tab Công Thức tạo trước nhé!</div>`;
+        return;
+    }
+    container.innerHTML = globalRecipes.map(r => {
+        const price = r.selling_price || 0;
+        const isOnSale = price > 0;
+        const shownPrice = Math.abs(price);
+        const img = r.image_url && r.image_url.trim() ? esc(r.image_url) : 'logo.jpg';
+        return `<div class="bg-brand-card p-3 rounded-2xl border border-[#E8D3C3] flex items-center justify-between text-xs">
+            <div class="flex items-center space-x-3 flex-1 min-w-0">
+                <div class="w-12 h-12 rounded-xl overflow-hidden border border-[#E8D3C3] bg-[#F9EFE4] flex-shrink-0">
+                    <img src="${img}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='logo.jpg';">
                 </div>
-            `).join('');
-        }
-
-        function renderFlow3(orders) {
-            const container = document.getElementById('admin-orders-list-3');
-            if(!container) return;
-            if(orders.length === 0) {
-                container.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Không có đơn nào đang tiến hành chế biến!</div>`;
-                return;
-            }
-
-            container.innerHTML = orders.map(o => `
-                <div class="bg-brand-card p-3.5 rounded-2xl border border-blue-300 shadow-xs space-y-2 text-xs">
-                    <div class="flex justify-between items-center border-b border-[#E8D3C3]/60 pb-1.5">
-                        <div>
-                            <span class="font-bold text-brand-brown">${o.customer_name}</span>
-                            <span class="text-[10px] text-slate-500 block">📞 ${o.customer_phone}</span>
-                        </div>
-                        <span class="font-bold text-blue-700 text-[11px] bg-blue-100 px-2 py-0.5 rounded-full">🔥 Đang Chế Biến</span>
-                    </div>
-                    <div class="flex justify-between items-center pt-1 border-t border-[#E8D3C3]/60 text-xs">
-                        <span class="font-bold text-brand-brown">Tổng: ${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0}đ</span>
-                        <button onclick="updateOrderStatus(${o.id}, 'delivering')" class="bg-blue-700 hover:bg-blue-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs cursor-pointer">
-                            Ra Lò → Giao Hàng
-                        </button>
-                    </div>
+                <div class="min-w-0">
+                    <div class="font-bold text-brand-brown truncate">${esc(r.name)}</div>
+                    <div class="text-[10px] text-slate-500">Giá bán: ${shownPrice ? money(shownPrice) : 'chưa đặt'}</div>
+                    <span class="text-[9px] px-2 py-0.5 rounded-full font-bold ${isOnSale ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}">
+                        ${isOnSale ? '● Đang Bán' : '○ Tạm Ngưng'}
+                    </span>
                 </div>
-            `).join('');
+            </div>
+            <div class="flex flex-col gap-1 ml-2">
+                <button onclick="toggleMenuItem(${r.id})" class="${isOnSale ? 'bg-slate-200 text-slate-700' : 'bg-emerald-600 text-white'} text-[10px] font-bold px-2 py-1.5 rounded-lg whitespace-nowrap">
+                    ${isOnSale ? '⏸ Tạm ngưng' : '▶ Bật bán'}
+                </button>
+                <button onclick="openAddMenuItemModal(${r.id})" class="bg-brand-brown text-white text-[10px] font-bold px-2 py-1.5 rounded-lg">⚙️ Cấu hình</button>
+            </div></div>`;
+    }).join('');
+}
+
+// Công tắc bật/tắt nhanh ngay trên danh sách - không cần mở modal, không cần gõ lại giá.
+async function toggleMenuItem(recipeId) {
+    const r = globalRecipes.find(x => x.id === recipeId);
+    if (!r) return;
+    const price = r.selling_price || 0;
+    if (price === 0) { alert("Món này chưa có giá bán. Bấm ⚙️ Cấu hình để đặt giá trước."); return openAddMenuItemModal(recipeId); }
+    const newPrice = -price; // đảo dấu: dương <-> âm
+    const { error } = await safeWrite('recipes', 'update', { selling_price: newPrice }, recipeId);
+    if (error) return alert("Lỗi cập nhật: " + error.message);
+    await loadDataFromCloud();
+}
+
+function openAddMenuItemModal(recipeId = null) {
+    const select = document.getElementById('menu-recipe-select');
+    if (globalRecipes.length === 0) return alert("Chưa có công thức nào để đăng bán!");
+    select.innerHTML = globalRecipes.map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('');
+    if (recipeId) select.value = String(recipeId);
+    onMenuRecipeChange();
+    document.getElementById('add-menu-item-modal').classList.remove('hidden');
+}
+
+// Khi đổi món trong dropdown thì nạp lại giá / ảnh / mô tả tương ứng.
+// Bản cũ thiếu bước này nên chọn món khác vẫn hiện dữ liệu món cũ.
+function onMenuRecipeChange() {
+    const id = parseInt(document.getElementById('menu-recipe-select').value);
+    const rec = globalRecipes.find(r => r.id === id);
+    if (!rec) return;
+    document.getElementById('menu-item-price').value = rec.selling_price ? Math.abs(rec.selling_price) : '';
+    document.getElementById('menu-item-image').value = rec.image_url || '';
+    document.getElementById('menu-item-desc').value = rec.description || '';
+    const cost = calcRecipeCost(rec);
+    const hint = document.getElementById('menu-cost-hint');
+    const price = Math.abs(rec.selling_price || 0);
+    let txt = `Giá thành hiện tại: ${money(cost)}.`;
+    if (price > 0) {
+        const profit = price - cost;
+        txt += ` Lãi gộp: ${money(profit)} (${cost > 0 ? Math.round(profit / cost * 100) : 0}%).`;
+    }
+    hint.innerText = txt;
+}
+
+function closeAddMenuItemModal() { document.getElementById('add-menu-item-modal').classList.add('hidden'); }
+
+async function saveMenuItemToPublic() {
+    const recipeId = document.getElementById('menu-recipe-select').value;
+    const price = parseFloat(document.getElementById('menu-item-price').value) || 0;
+    const image_url = document.getElementById('menu-item-image').value.trim();
+    const desc = document.getElementById('menu-item-desc').value.trim();
+    if (!recipeId) return alert("Vui lòng chọn công thức!");
+    if (price <= 0) return alert("Vui lòng nhập giá bán lớn hơn 0!");
+
+    const { error } = await safeWrite('recipes', 'update',
+        { selling_price: Math.abs(price), image_url: image_url, description: desc }, recipeId);
+    if (error) return alert("Lỗi lưu: " + error.message);
+
+    alert("✅ Món đã BẬT BÁN trên Menu Khách!");
+    closeAddMenuItemModal();
+    await loadDataFromCloud();
+}
+
+async function removeMenuItemFromPublic() {
+    const recipeId = document.getElementById('menu-recipe-select').value;
+    if (!recipeId) return;
+    const rec = globalRecipes.find(r => r.id === parseInt(recipeId));
+    const keep = Math.abs(rec && rec.selling_price ? rec.selling_price : (parseFloat(document.getElementById('menu-item-price').value) || 0));
+    if (!confirm("Tạm ngưng bán món này? (Giá cũ vẫn được giữ để bật lại sau)")) return;
+
+    const { error } = await safeWrite('recipes', 'update', { selling_price: -keep }, recipeId);
+    if (error) return alert("Lỗi: " + error.message);
+    alert("⏸ Đã tạm ngưng. Bấm '▶ Bật bán' bất cứ lúc nào để mở lại.");
+    closeAddMenuItemModal();
+    await loadDataFromCloud();
+}
+
+/* --------------------------------------------------------------
+   KHO VẬT TƯ  (LỖI SỐ 2: nhập kho không lên kệ)
+
+   Gốc rễ thật: bản cũ gửi expiry_date = '' (chuỗi rỗng) lên cột kiểu DATE.
+   Postgres báo "invalid input syntax for type date" và TỪ CHỐI dòng đó.
+   Nhưng code cũ viết `await supabaseClient.from(...).insert(...)` mà KHÔNG
+   đọc biến error, nên app đóng modal, gọi load lại và im như không có chuyện gì.
+   Fix: HSD trống -> gửi null, và mọi thao tác ghi đều phải đọc error để báo.
+   -------------------------------------------------------------- */
+function renderAllStockTabs() {
+    const map = {
+        'ing-list-nl': globalIngredients.filter(i => !i.category || i.category === 'nguyen_lieu'),
+        'ing-list-bb': globalIngredients.filter(i => i.category === 'bao_bi'),
+        'ing-list-kb': globalIngredients.filter(i => i.category === 'khuon_banh')
+    };
+    for (const id in map) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = renderStockCategory(map[id]);
+    }
+}
+
+function renderStockCategory(items) {
+    if (items.length === 0) return `<div class="text-xs text-slate-400 italic text-center py-4">Chưa có dữ liệu trong kho này</div>`;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+
+    return items.map(ing => {
+        const img = ing.image_url && ing.image_url.trim() ? esc(ing.image_url) : 'logo.jpg';
+        const qty = Number(ing.stock_qty) || 0;
+        const unitPrice = qty > 0 ? (Number(ing.total_price) || 0) / qty : 0;
+
+        let badge = '';
+        if (ing.expiry_date) {
+            const exp = new Date(ing.expiry_date); exp.setHours(0, 0, 0, 0);
+            const d = Math.ceil((exp - today) / 86400000);
+            if (d < 0) badge = `<span class="bg-rose-100 text-rose-700 font-bold text-[9px] px-1.5 py-0.5 rounded-md border border-rose-200">🚨 Đã Hết Hạn!</span>`;
+            else if (d <= 7) badge = `<span class="bg-amber-100 text-amber-800 font-bold text-[9px] px-1.5 py-0.5 rounded-md border border-amber-300">⚠️ Cận Date (còn ${d} ngày)</span>`;
+            else badge = `<span class="text-slate-400 text-[10px]">HSD: ${esc(ing.expiry_date)}</span>`;
         }
+        // Cảnh báo tồn kho chạm đáy để anh Huy kịp đi chợ.
+        const lowStock = qty <= 0
+            ? `<span class="bg-rose-100 text-rose-700 font-bold text-[9px] px-1.5 py-0.5 rounded-md border border-rose-200 ml-1">HẾT HÀNG</span>` : '';
 
-        function renderFlow4(orders) {
-            const container = document.getElementById('admin-orders-list-4');
-            if(!container) return;
-            if(orders.length === 0) {
-                container.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Chưa có đơn nào chờ giao!</div>`;
-                return;
-            }
+        return `<div onclick="openAddIngModal(null, ${ing.id})" class="bg-brand-card cursor-pointer p-2.5 rounded-2xl border border-[#E8D3C3] flex items-center justify-between text-xs">
+            <div class="flex items-center space-x-3 min-w-0">
+                <div class="w-12 h-12 rounded-xl overflow-hidden border border-[#E8D3C3] bg-[#F9EFE4] flex-shrink-0">
+                    <img src="${img}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='logo.jpg';">
+                </div>
+                <div class="min-w-0">
+                    <div class="font-bold text-brand-brown truncate">${esc(ing.name)}${lowStock}</div>
+                    <div class="text-[10px] text-slate-500">Đơn giá: ${Math.round(unitPrice).toLocaleString('vi-VN')}đ/${esc(ing.unit || '')}</div>
+                    <div class="mt-0.5">${badge}</div>
+                </div>
+            </div>
+            <div class="text-right flex-shrink-0 pl-2">
+                <span class="font-extrabold text-brand-brown text-sm">${qty.toLocaleString('vi-VN')} ${esc(ing.unit || '')}</span>
+                <div class="text-[10px] text-slate-400">Tồn kho</div>
+            </div></div>`;
+    }).join('');
+}
 
-            container.innerHTML = orders.map(o => {
-                const encodedAddr = encodeURIComponent(o.customer_name || 'Bình Dương');
-                const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddr}`;
+function openAddIngModal(catDefault, ingId) {
+    catDefault = catDefault || 'nguyen_lieu';
+    if (ingId) {
+        const ing = globalIngredients.find(i => i.id === ingId);
+        if (!ing) return;
+        document.getElementById('ing-modal-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-brand-gold mr-1.5"></i>Sửa Vật Tư Kho`;
+        document.getElementById('ing-id-hidden').value = ing.id;
+        document.getElementById('ing-category').value = ing.category || 'nguyen_lieu';
+        document.getElementById('ing-name').value = ing.name || '';
+        document.getElementById('ing-image').value = ing.image_url || '';
+        document.getElementById('ing-qty').value = ing.stock_qty != null ? ing.stock_qty : '';
+        buildUnitSelect(ing.unit || 'gam');
+        document.getElementById('ing-price').value = ing.total_price != null ? ing.total_price : '';
+        document.getElementById('ing-expiry').value = ing.expiry_date || '';
+        document.getElementById('btn-del-ing').classList.remove('hidden');
+        document.getElementById('btn-save-ing').className = "w-2/3 bg-brand-brown text-white font-bold py-3 rounded-xl text-xs shadow-md";
+    } else {
+        document.getElementById('ing-modal-title').innerHTML = `<i class="fa-solid fa-boxes-packing text-brand-gold mr-1.5"></i>Nhập Kho Mới`;
+        document.getElementById('ing-id-hidden').value = '';
+        document.getElementById('ing-category').value = catDefault;
+        ['ing-name','ing-image','ing-qty','ing-price','ing-expiry'].forEach(id => document.getElementById(id).value = '');
+        buildUnitSelect(catDefault === 'nguyen_lieu' ? 'gam' : 'cái');
+        document.getElementById('btn-del-ing').classList.add('hidden');
+        document.getElementById('btn-save-ing').className = "w-full bg-brand-brown text-white font-bold py-3 rounded-xl text-xs shadow-md";
+    }
+    document.getElementById('ing-unitprice-preview').innerText = '';
+    document.getElementById('add-ing-modal').classList.remove('hidden');
+}
 
-                return `
-                    <div class="bg-brand-card p-3.5 rounded-2xl border border-emerald-300 shadow-xs space-y-2.5 text-xs">
-                        <div class="flex justify-between items-center border-b border-[#E8D3C3]/60 pb-1.5">
-                            <div>
-                                <span class="font-bold text-brand-brown">${o.customer_name}</span>
-                                <span class="text-[10px] text-slate-500 block">📞 ${o.customer_phone}</span>
-                            </div>
-                            <span class="font-bold text-emerald-700 text-[11px] bg-emerald-100 px-2 py-0.5 rounded-full">🛵 Chờ Giao Bánh</span>
-                        </div>
+function closeAddIngModal() { document.getElementById('add-ing-modal').classList.add('hidden'); }
 
-                        <a href="${gmapsUrl}" target="_blank" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold p-2 rounded-xl border border-emerald-200 flex items-center justify-center gap-1.5 transition-all text-[11px]">
-                            <i class="fa-solid fa-map-location-dot text-emerald-600"></i> Dẫn Đường Google Maps Tới Nhà Khách
-                        </a>
-
-                        <div class="flex justify-between items-center pt-1 border-t border-[#E8D3C3]/60 text-xs">
-                            <span class="font-bold text-brand-brown">Tổng: ${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0}đ</span>
-                            <button onclick="updateOrderStatus(${o.id}, 'completed')" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs cursor-pointer">
-                                ✓ Hoàn Thành
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+// Xem trước đơn giá ngay lúc gõ, để phát hiện nhập nhầm đơn vị (vd mua 1kg mà gõ 1).
+['ing-qty', 'ing-price'].forEach(id => {
+    document.addEventListener('input', function (e) {
+        if (e.target && e.target.id === id) {
+            const q = parseFloat(document.getElementById('ing-qty').value) || 0;
+            const p = parseFloat(document.getElementById('ing-price').value) || 0;
+            const u = document.getElementById('ing-unit').value;
+            document.getElementById('ing-unitprice-preview').innerText =
+                q > 0 ? `→ Đơn giá quy đổi: ${Math.round(p / q).toLocaleString('vi-VN')}đ / ${u}` : '';
         }
+    });
+});
 
-        async function updateOrderStatus(orderId, newStatus) {
-            const { error } = await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
-            if(error) return alert("Lỗi cập nhật trạng thái: " + error.message);
+async function saveIngredient() {
+    const ingId = document.getElementById('ing-id-hidden').value;
+    const name = document.getElementById('ing-name').value.trim();
+    if (!name) return alert("Vui lòng nhập tên vật tư!");
 
-            loadDataFromCloud();
+    const qty = parseFloat(document.getElementById('ing-qty').value);
+    const price = parseFloat(document.getElementById('ing-price').value);
+    const expiryRaw = document.getElementById('ing-expiry').value;
+
+    const payload = {
+        category: document.getElementById('ing-category').value,
+        name: name,
+        image_url: document.getElementById('ing-image').value.trim(),
+        stock_qty: isNaN(qty) ? 0 : qty,
+        unit: document.getElementById('ing-unit').value,
+        total_price: isNaN(price) ? 0 : price,
+        // ĐÂY LÀ DÒNG SỬA LỖI CHÍNH: rỗng phải là null, tuyệt đối không phải ''
+        expiry_date: expiryRaw ? expiryRaw : null
+    };
+
+    const res = ingId
+        ? await safeWrite('ingredients', 'update', payload, ingId)
+        : await safeWrite('ingredients', 'insert', payload);
+
+    // Có báo lỗi rõ ràng thay vì im lặng như bản cũ
+    if (res.error) return alert("❌ Lưu kho thất bại:\n" + res.error.message);
+
+    closeAddIngModal();
+    await loadDataFromCloud();
+    alert(ingId ? "✅ Đã cập nhật vật tư!" : "✅ Đã nhập kho thành công!");
+}
+
+async function deleteIngredient() {
+    const ingId = document.getElementById('ing-id-hidden').value;
+    if (!ingId) return;
+    if (!confirm("Xóa vật tư này khỏi Kho?")) return;
+    const { error } = await supabaseClient.from('ingredients').delete().eq('id', ingId);
+    if (error) return alert("❌ Không xóa được: " + error.message + "\n(Có thể vật tư đang nằm trong một công thức)");
+    closeAddIngModal();
+    await loadDataFromCloud();
+    alert("🗑️ Đã xóa vật tư!");
+}
+
+/* --------------------------------------------------------------
+   CÔNG THỨC  (LỖI SỐ 3: thiếu hoàn toàn nút thêm / sửa / xóa)
+   -------------------------------------------------------------- */
+
+// Tính giá thành 1 mẻ = tiền nguyên liệu + bao bì + nhân công.
+function calcRecipeCost(r) {
+    let ingCost = 0;
+    (r.recipe_items || []).forEach(ri => {
+        const ing = ri.ingredients;
+        if (ing && Number(ing.stock_qty) > 0) {
+            ingCost += (Number(ing.total_price) / Number(ing.stock_qty)) * Number(ri.amount || 0);
         }
+    });
+    return ingCost + (Number(r.packaging_cost) || 0) + (Number(r.labor_cost) || 0);
+}
 
-        function triggerAdminAuth() {
-            if(isAdminAuthenticated) switchMode('admin');
-            else {
-                document.getElementById('pin-input').value = '';
-                document.getElementById('pin-modal').classList.remove('hidden');
-            }
-        }
+function renderRecipes() {
+    const list = document.getElementById('recipe-list');
+    if (!list) return;
+    if (globalRecipes.length === 0) {
+        list.innerHTML = `<div class="text-xs text-slate-400 italic text-center py-6">Chưa có công thức nào. Bấm "+ Thêm Công Thức".</div>`;
+        return;
+    }
+    list.innerHTML = globalRecipes.map(r => {
+        const cost = calcRecipeCost(r);
+        const items = (r.recipe_items || []);
+        const ingLine = items.length
+            ? items.map(ri => `${esc(ri.ingredients ? ri.ingredients.name : '?')}: <b>${ri.amount} ${esc(ri.ingredients ? ri.ingredients.unit : '')}</b>`).join(' • ')
+            : '<i class="text-rose-500">Chưa khai báo nguyên liệu → giá thành chưa chính xác</i>';
+        return `<div onclick="openRecipeModal(${r.id})" class="bg-brand-card p-3.5 rounded-2xl border border-[#E8D3C3] text-xs space-y-1.5 cursor-pointer">
+            <div class="flex justify-between font-bold text-brand-brown border-b border-[#E8D3C3]/50 pb-1 gap-2">
+                <span class="truncate">${esc(r.name)}</span>
+                <span class="flex-shrink-0">Giá thành: ${money(Math.round(cost))}</span>
+            </div>
+            <div class="text-[10px] text-slate-600 leading-relaxed">${ingLine}</div>
+            <div class="text-[10px] text-slate-500 italic">${esc(r.description || 'Chưa nhập ghi chú cách làm')}</div>
+            <div class="text-[10px] text-brand-gold font-bold">✎ Chạm để sửa</div>
+        </div>`;
+    }).join('');
+}
 
-        function closePinModal() { document.getElementById('pin-modal').classList.add('hidden'); }
+function openRecipeModal(recipeId) {
+    document.getElementById('recipe-ing-rows').innerHTML = '';
+    if (recipeId) {
+        const r = globalRecipes.find(x => x.id === recipeId);
+        if (!r) return;
+        document.getElementById('recipe-modal-title').innerText = 'Sửa Công Thức';
+        document.getElementById('recipe-id-hidden').value = r.id;
+        document.getElementById('recipe-name').value = r.name || '';
+        document.getElementById('recipe-desc').value = r.description || '';
+        document.getElementById('recipe-pack').value = r.packaging_cost || '';
+        document.getElementById('recipe-labor').value = r.labor_cost || '';
+        (r.recipe_items || []).forEach(ri => addRecipeIngRow(ri.ingredient_id, ri.amount));
+        document.getElementById('btn-del-recipe').classList.remove('hidden');
+    } else {
+        document.getElementById('recipe-modal-title').innerText = 'Thêm Công Thức Mới';
+        document.getElementById('recipe-id-hidden').value = '';
+        ['recipe-name','recipe-desc','recipe-pack','recipe-labor'].forEach(id => document.getElementById(id).value = '');
+        addRecipeIngRow();
+        document.getElementById('btn-del-recipe').classList.add('hidden');
+    }
+    updateRecipeCostPreview();
+    document.getElementById('recipe-modal').classList.remove('hidden');
+}
 
-        function verifyPin() {
-            const inputPin = document.getElementById('pin-input').value.trim();
-            const savedPin = localStorage.getItem('tiu_sp_pin') || '1234';
-            if(inputPin === savedPin) {
-                isAdminAuthenticated = true;
-                closePinModal();
-                switchMode('admin');
-            } else alert("❌ Mã PIN không chính xác!");
-        }
+function closeRecipeModal() { document.getElementById('recipe-modal').classList.add('hidden'); }
 
-        function switchMode(mode) {
-            document.getElementById('view-user').classList.toggle('hidden', mode !== 'user');
-            document.getElementById('view-admin').classList.toggle('hidden', mode !== 'admin');
-        }
+// Mỗi dòng nguyên liệu = 1 select (chọn từ kho) + 1 ô số lượng.
+function addRecipeIngRow(ingId, amount) {
+    if (globalIngredients.length === 0) { alert("Kho đang trống. Nhập nguyên liệu vào kho trước đã."); return; }
+    const wrap = document.getElementById('recipe-ing-rows');
+    const row = document.createElement('div');
+    row.className = 'recipe-ing-row flex items-center gap-1.5';
 
-        function openCheckoutModal() {
-            if(cart.length === 0) return alert("Vui lòng chọn bánh trước khi đặt!");
-            const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-            document.getElementById('checkout-total-price').innerText = `${total.toLocaleString('vi-VN')}đ`;
-            document.getElementById('checkout-modal').classList.remove('hidden');
-        }
+    const opts = globalIngredients.map(i =>
+        `<option value="${i.id}" ${String(i.id) === String(ingId) ? 'selected' : ''}>${esc(i.name)} (${esc(i.unit || '')})</option>`
+    ).join('');
 
-        function closeCheckoutModal() { document.getElementById('checkout-modal').classList.add('hidden'); }
+    row.innerHTML = `
+        <select class="ri-ing inp flex-1 text-[11px] py-2" onchange="updateRecipeCostPreview()">${opts}</select>
+        <input class="ri-amt inp w-20 text-[11px] py-2" type="number" inputmode="decimal" placeholder="SL" value="${amount != null ? amount : ''}" oninput="updateRecipeCostPreview()">
+        <button onclick="this.parentElement.remove();updateRecipeCostPreview();" class="text-rose-500 px-2 text-sm flex-shrink-0"><i class="fa-solid fa-circle-minus"></i></button>`;
+    wrap.appendChild(row);
+    updateRecipeCostPreview();
+}
 
-        async function confirmSubmitOrder() {
-            const name = document.getElementById('cust-name').value.trim();
-            const phone = document.getElementById('cust-phone').value.trim();
-            const note = document.getElementById('cust-note').value.trim();
+// Tính thử giá thành ngay trong lúc gõ - để anh Huy thấy ngay món có lãi hay không.
+function updateRecipeCostPreview() {
+    let cost = 0;
+    document.querySelectorAll('.recipe-ing-row').forEach(row => {
+        const ingId = parseInt(row.querySelector('.ri-ing').value);
+        const amt = parseFloat(row.querySelector('.ri-amt').value) || 0;
+        const ing = globalIngredients.find(i => i.id === ingId);
+        if (ing && Number(ing.stock_qty) > 0) cost += (Number(ing.total_price) / Number(ing.stock_qty)) * amt;
+    });
+    cost += (parseFloat(document.getElementById('recipe-pack').value) || 0);
+    cost += (parseFloat(document.getElementById('recipe-labor').value) || 0);
+    document.getElementById('recipe-cost-preview').innerText = '💰 Giá thành tạm tính: ' + money(Math.round(cost));
+}
+['recipe-pack','recipe-labor'].forEach(id => {
+    document.addEventListener('input', e => { if (e.target && e.target.id === id) updateRecipeCostPreview(); });
+});
 
-            if(!name || !phone || !note) return alert("Vui lòng điền đủ Tên, SĐT và Địa chỉ giao hàng!");
+async function saveRecipe() {
+    const id = document.getElementById('recipe-id-hidden').value;
+    const name = document.getElementById('recipe-name').value.trim();
+    if (!name) return alert("Vui lòng nhập tên món!");
 
-            const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-            const fullCustomerInfo = `${name} - Địa chỉ: ${note}`;
+    // Gom các dòng nguyên liệu, bỏ dòng trống hoặc số lượng <= 0
+    const rows = [];
+    document.querySelectorAll('.recipe-ing-row').forEach(row => {
+        const ingId = parseInt(row.querySelector('.ri-ing').value);
+        const amt = parseFloat(row.querySelector('.ri-amt').value);
+        if (ingId && !isNaN(amt) && amt > 0) rows.push({ ingredient_id: ingId, amount: amt });
+    });
 
-            const { data: order, error } = await supabaseClient.from('orders').insert({
-                customer_name: fullCustomerInfo,
-                customer_phone: phone,
-                status: 'pending',
-                total_amount: total
-            }).select().single();
+    const payload = {
+        name: name,
+        description: document.getElementById('recipe-desc').value.trim(),
+        packaging_cost: parseFloat(document.getElementById('recipe-pack').value) || 0,
+        labor_cost: parseFloat(document.getElementById('recipe-labor').value) || 0
+    };
 
-            if(error) return alert("Lỗi gửi đơn: " + error.message);
+    let recipeId = id;
+    if (id) {
+        const res = await safeWrite('recipes', 'update', payload, id);
+        if (res.error) return alert("❌ Lỗi lưu công thức: " + res.error.message);
+    } else {
+        // Món mới mặc định CHƯA bán (selling_price = 0), phải qua tab +Món đặt giá.
+        const res = await safeWrite('recipes', 'insert', Object.assign({ selling_price: 0 }, payload));
+        if (res.error) return alert("❌ Lỗi tạo công thức: " + res.error.message);
+        recipeId = res.data.id;
+    }
 
-            const orderItems = cart.map(i => ({
-                order_id: order.id,
-                recipe_id: i.recipeId,
-                quantity: i.qty,
-                price: i.price
-            }));
+    // Đồng bộ định lượng: xóa sạch dòng cũ rồi ghi lại dòng mới.
+    // Cách này đơn giản và tránh sai sót khi anh vừa thêm vừa xóa nguyên liệu.
+    const del = await supabaseClient.from('recipe_items').delete().eq('recipe_id', recipeId);
+    if (del.error) return alert("❌ Lỗi dọn định lượng cũ: " + del.error.message);
 
-            await supabaseClient.from('order_items').insert(orderItems);
-            alert("🎉 Đã gửi đơn thành công! Tiệm Bánh Ti Ù sẽ liên hệ giao ngay.");
-            cart = [];
-            renderCartUI();
-            closeCheckoutModal();
-        }
+    if (rows.length > 0) {
+        const ins = await supabaseClient.from('recipe_items')
+            .insert(rows.map(r => ({ recipe_id: recipeId, ingredient_id: r.ingredient_id, amount: r.amount })));
+        if (ins.error) return alert("❌ Lỗi lưu định lượng: " + ins.error.message);
+    }
 
-        function renderRecipes() {
-            const list = document.getElementById('recipe-list');
-            if(!list) return;
-            list.innerHTML = globalRecipes.map(r => {
-                let ingCost = 0;
-                if(r.recipe_items) {
-                    r.recipe_items.forEach(ri => {
-                        if(ri.ingredients && ri.ingredients.stock_qty > 0) {
-                            ingCost += (ri.ingredients.total_price / ri.ingredients.stock_qty) * ri.amount;
-                        }
-                    });
-                }
-                const totalCost = ingCost + (r.packaging_cost || 0) + (r.labor_cost || 0);
+    closeRecipeModal();
+    await loadDataFromCloud();
+    alert("✅ Đã lưu công thức!");
+}
 
-                return `
-                    <div class="bg-[#FFFDF9] p-3.5 rounded-2xl border border-[#E8D3C3] text-xs space-y-1.5 shadow-xs">
-                        <div class="flex justify-between font-bold text-brand-brown border-b border-[#E8D3C3]/50 pb-1">
-                            <span>${r.name}</span>
-                            <span class="text-brand-brown">Giá thành: ${Math.round(totalCost).toLocaleString('vi-VN')}đ</span>
-                        </div>
-                        <div class="text-[10px] text-slate-500 italic">${r.description || 'Chưa nhập ghi chú cách làm'}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-    </script>
+async function deleteRecipe() {
+    const id = document.getElementById('recipe-id-hidden').value;
+    if (!id) return;
+    if (!confirm("Xóa hẳn công thức này? Các đơn hàng cũ có thể đang tham chiếu tới nó.")) return;
+
+    // Phải xóa recipe_items trước, nếu không khóa ngoại (foreign key) sẽ chặn.
+    await supabaseClient.from('recipe_items').delete().eq('recipe_id', id);
+    const { error } = await supabaseClient.from('recipes').delete().eq('id', id);
+    if (error) return alert("❌ Không xóa được: " + error.message +
+        "\nMón này đang nằm trong đơn hàng cũ. Cách xử lý: dùng '⏸ Tạm ngưng' ở tab +Món thay vì xóa.");
+
+    closeRecipeModal();
+    await loadDataFromCloud();
+    alert("🗑️ Đã xóa công thức!");
+}
+
+/* --------------------------------------------------------------
+   ĐƠN HÀNG - LUỒNG 4 BƯỚC + TRỪ KHO
+   -------------------------------------------------------------- */
+async function loadAdminOrders() {
+    if (!supabaseClient) return;
+    const { data: orders, error } = await supabaseClient
+        .from('orders')
+        .select('*, order_items(*, recipes(*, recipe_items(*, ingredients(*))))')
+        .order('created_at', { ascending: false });
+    if (error) { console.error('Lỗi tải đơn:', error.message); return; }
+
+    globalOrders = orders || [];
+    const f = s => globalOrders.filter(o => o.status === s);
+
+    renderFlow1(f('pending'));
+    renderFlow2(f('prep'));
+    renderFlow3(f('cooking'));
+    renderFlow4(f('delivering'));
+    updateBadges([f('pending').length, f('prep').length, f('cooking').length, f('delivering').length]);
+    if (currentAdminTab === 'customers') renderCustomerCRM();
+}
+
+function updateBadges(counts) {
+    counts.forEach((n, i) => {
+        const el = document.getElementById('orders-badge-' + (i + 1));
+        if (!el) return;
+        el.innerText = n;
+        el.classList.toggle('hidden', n === 0);
+        el.classList.toggle('flex', n > 0);
+    });
+}
+
+// Khối thông tin khách dùng chung cho cả 4 bước, đã tách tên / địa chỉ rõ ràng.
+function orderHeader(o, badgeHtml) {
+    const c = splitCustomer(o);
+    return `<div class="flex justify-between items-start border-b border-[#E8D3C3]/60 pb-1.5 gap-2">
+        <div class="min-w-0">
+            <span class="font-bold text-brand-brown">${esc(c.name)}</span>
+            <span class="text-[10px] text-slate-500 block">📞 ${esc(o.customer_phone || '')}</span>
+            <span class="text-[10px] text-slate-500 block">📍 ${esc(c.address || 'Chưa có địa chỉ')}</span>
+        </div>
+        ${badgeHtml}
+    </div>`;
+}
+
+function orderItemsHtml(o) {
+    const items = o.order_items || [];
+    if (!items.length) return '';
+    return `<div class="bg-[#F9EFE4] rounded-xl p-2 text-[11px] space-y-0.5">` +
+        items.map(it => `<div class="flex justify-between">
+            <span>${esc(it.recipes ? it.recipes.name : 'Món đã xóa')} × <b>${it.quantity}</b></span>
+            <span>${money((it.price || 0) * (it.quantity || 0))}</span>
+        </div>`).join('') + `</div>`;
+}
+
+function renderFlow1(orders) {
+    const c = document.getElementById('admin-orders-list-1');
+    if (orders.length === 0) return c.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Không có đơn mới nào!</div>`;
+    c.innerHTML = orders.map(o => `
+        <div class="p-3.5 rounded-2xl border border-amber-400 bg-amber-50/40 space-y-2 text-xs">
+            ${orderHeader(o, `<span class="font-bold text-amber-800 text-[10px] bg-amber-200 px-2 py-0.5 rounded-full flex-shrink-0">⏳ Đơn Mới</span>`)}
+            ${orderItemsHtml(o)}
+            <div class="flex justify-between items-center pt-1 border-t border-[#E8D3C3]/60">
+                <span class="font-bold text-brand-brown">Tổng: ${money(o.total_amount)}</span>
+                <div class="flex gap-1.5">
+                    <button onclick="markBoom(${o.id})" class="bg-rose-100 text-rose-700 font-bold px-2 py-1.5 rounded-xl border border-rose-200">Hủy/Boom</button>
+                    <button onclick="updateOrderStatus(${o.id},'prep')" class="bg-amber-700 text-white font-bold px-3 py-1.5 rounded-xl">Nhận Đơn →</button>
+                </div>
+            </div>
+        </div>`).join('');
+}
+
+/* Bước Chuẩn Bị: bóc tách nguyên liệu cần dùng.
+   Đây chính là phần tiêu đề "Bóc Tách Kho" mà bản cũ mới có chữ, chưa có code. */
+function calcOrderIngredients(o) {
+    const need = {}; // gom theo ingredient_id
+    (o.order_items || []).forEach(it => {
+        const rec = it.recipes;
+        if (!rec || !rec.recipe_items) return;
+        rec.recipe_items.forEach(ri => {
+            const ing = ri.ingredients;
+            if (!ing) return;
+            if (!need[ing.id]) need[ing.id] = { id: ing.id, name: ing.name, unit: ing.unit, qty: 0, stock: Number(ing.stock_qty) || 0, total_price: Number(ing.total_price) || 0 };
+            need[ing.id].qty += (Number(ri.amount) || 0) * (Number(it.quantity) || 0);
+        });
+    });
+    return Object.values(need);
+}
+
+function renderFlow2(orders) {
+    const c = document.getElementById('admin-orders-list-2');
+    if (orders.length === 0) return c.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Không có đơn nào cần chuẩn bị!</div>`;
+    c.innerHTML = orders.map(o => {
+        const needs = calcOrderIngredients(o);
+        const needHtml = needs.length
+            ? needs.map(n => {
+                const enough = n.stock >= n.qty;
+                return `<div class="flex justify-between ${enough ? '' : 'text-rose-600 font-bold'}">
+                    <span>${esc(n.name)}</span>
+                    <span>${n.qty.toLocaleString('vi-VN')} ${esc(n.unit || '')} ${enough ? '' : `⚠️ kho chỉ còn ${n.stock}`}</span>
+                </div>`;
+            }).join('')
+            : `<i class="text-rose-500">Món trong đơn chưa khai báo định lượng nên không bóc tách được.</i>`;
+
+        return `<div class="bg-brand-card p-3.5 rounded-2xl border border-amber-300 space-y-2 text-xs">
+            ${orderHeader(o, `<span class="font-bold text-amber-800 text-[10px] flex-shrink-0">📋 Chuẩn Bị</span>`)}
+            ${orderItemsHtml(o)}
+            <div class="bg-[#F4E4D4]/60 rounded-xl p-2 text-[11px] space-y-0.5 border border-[#E8D3C3]">
+                <div class="font-bold text-brand-brown mb-1">🥣 Nguyên liệu cần lấy:</div>
+                ${needHtml}
+            </div>
+            <div class="flex justify-between items-center pt-1 border-t border-[#E8D3C3]/60">
+                <span class="font-bold text-brand-brown">Tổng: ${money(o.total_amount)}</span>
+                <button onclick="confirmPrepDone(${o.id})" class="bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl">✓ Xuất Kho → Làm Bánh</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderFlow3(orders) {
+    const c = document.getElementById('admin-orders-list-3');
+    if (orders.length === 0) return c.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Không có đơn nào đang chế biến!</div>`;
+    c.innerHTML = orders.map(o => `
+        <div class="bg-brand-card p-3.5 rounded-2xl border border-blue-300 space-y-2 text-xs">
+            ${orderHeader(o, `<span class="font-bold text-blue-700 text-[10px] bg-blue-100 px-2 py-0.5 rounded-full flex-shrink-0">🔥 Đang Làm</span>`)}
+            ${orderItemsHtml(o)}
+            <div class="flex justify-between items-center pt-1 border-t border-[#E8D3C3]/60">
+                <span class="font-bold text-brand-brown">Tổng: ${money(o.total_amount)}</span>
+                <button onclick="updateOrderStatus(${o.id},'delivering')" class="bg-blue-700 text-white font-bold px-3 py-1.5 rounded-xl">Ra Lò → Giao</button>
+            </div>
+        </div>`).join('');
+}
+
+function renderFlow4(orders) {
+    const c = document.getElementById('admin-orders-list-4');
+    if (orders.length === 0) return c.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Chưa có đơn nào chờ giao!</div>`;
+    c.innerHTML = orders.map(o => {
+        const cust = splitCustomer(o);
+        // CHỈ truyền địa chỉ vào Maps - đây là chỗ bản cũ nhét cả tên vào nên tìm sai.
+        const url = gmapsUrl(cust.address);
+        const canMap = cust.address && cust.address.length > 3;
+        return `<div class="bg-brand-card p-3.5 rounded-2xl border border-emerald-300 space-y-2.5 text-xs">
+            ${orderHeader(o, `<span class="font-bold text-emerald-700 text-[10px] bg-emerald-100 px-2 py-0.5 rounded-full flex-shrink-0">🛵 Chờ Giao</span>`)}
+            ${orderItemsHtml(o)}
+            ${canMap
+                ? `<a href="${url}" target="_blank" class="w-full bg-emerald-50 text-emerald-800 font-bold p-2 rounded-xl border border-emerald-200 flex items-center justify-center gap-1.5 text-[11px]">
+                    <i class="fa-solid fa-map-location-dot"></i> Dẫn Đường Tới Địa Chỉ Khách</a>`
+                : `<div class="w-full bg-slate-100 text-slate-500 p-2 rounded-xl text-center text-[11px]">Đơn này chưa có địa chỉ để dẫn đường</div>`}
+            <div class="flex justify-between items-center pt-1 border-t border-[#E8D3C3]/60 gap-1.5">
+                <span class="font-bold text-brand-brown flex-shrink-0">${money(o.total_amount)}</span>
+                <div class="flex gap-1.5">
+                    <button onclick="markBoom(${o.id})" class="bg-rose-100 text-rose-700 font-bold px-2 py-1.5 rounded-xl border border-rose-200">💢 Boom</button>
+                    <button onclick="markDebt(${o.id})" class="bg-amber-100 text-amber-800 font-bold px-2 py-1.5 rounded-xl border border-amber-300">📝 Ghi Nợ</button>
+                    <button onclick="updateOrderStatus(${o.id},'completed')" class="bg-emerald-700 text-white font-bold px-2.5 py-1.5 rounded-xl">✓ Xong</button>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+    const { error } = await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
+    if (error) return alert("❌ Lỗi cập nhật trạng thái: " + error.message);
+    await loadAdminOrders();
+}
+
+/* Trừ kho khi xuất nguyên liệu.
+   Mẹo quan trọng: trừ ĐỒNG THỜI stock_qty và total_price theo đúng tỷ lệ.
+   Nếu chỉ trừ số lượng mà giữ nguyên tổng tiền, đơn giá (= tổng tiền / tồn)
+   sẽ tự phình lên sau mỗi lần xuất, làm giá thành món bị thổi sai. */
+async function confirmPrepDone(orderId) {
+    const o = globalOrders.find(x => x.id === orderId);
+    if (!o) return;
+    const needs = calcOrderIngredients(o);
+
+    if (needs.length === 0) {
+        if (!confirm("Đơn này chưa bóc tách được nguyên liệu (công thức chưa khai định lượng).\nVẫn chuyển sang bước Làm Bánh?")) return;
+        return updateOrderStatus(orderId, 'cooking');
+    }
+
+    const thieu = needs.filter(n => n.stock < n.qty);
+    let msg = "Xác nhận XUẤT KHO cho đơn này?\nHệ thống sẽ trừ tồn kho ngay và không tự hoàn lại được.";
+    if (thieu.length) msg = "⚠️ THIẾU NGUYÊN LIỆU:\n" + thieu.map(n => `• ${n.name}: cần ${n.qty}, còn ${n.stock}`).join('\n') + "\n\nVẫn tiếp tục xuất kho (tồn sẽ về 0)?";
+    if (!confirm(msg)) return;
+
+    for (const n of needs) {
+        const newQty = Math.max(0, n.stock - n.qty);
+        const newTotal = n.stock > 0 ? Math.round(n.total_price * (newQty / n.stock)) : 0;
+        const { error } = await supabaseClient.from('ingredients')
+            .update({ stock_qty: newQty, total_price: newTotal }).eq('id', n.id);
+        if (error) return alert("❌ Lỗi trừ kho " + n.name + ": " + error.message);
+    }
+    await updateOrderStatus(orderId, 'cooking');
+    await loadDataFromCloud();
+    alert("✅ Đã xuất kho và chuyển sang bước Làm Bánh.");
+}
+
+// Ghi nợ & Boom: dùng chính cột status của bảng orders nên KHÔNG cần tạo bảng mới.
+async function markDebt(orderId) {
+    if (!confirm("Ghi nhận đơn này là KHÁCH CÒN NỢ tiền?")) return;
+    await updateOrderStatus(orderId, 'debt');
+    alert("📝 Đã ghi nợ. Xem & thu nợ tại tab Khách Hàng.");
+    switchAdminTab('customers');
+}
+
+async function markBoom(orderId) {
+    if (!confirm("Đánh dấu khách BOOM HÀNG / hủy đơn?\nĐơn này sẽ không tính vào doanh thu.")) return;
+    await updateOrderStatus(orderId, 'boom');
+    alert("💢 Đã đánh dấu boom hàng. Lần sau khách này sẽ có cảnh báo đỏ ở tab Khách Hàng.");
+}
+
+async function collectDebt(orderId) {
+    if (!confirm("Xác nhận ĐÃ THU đủ tiền đơn này?")) return;
+    await updateOrderStatus(orderId, 'completed');
+    renderCustomerCRM();
+}
+
+/* --------------------------------------------------------------
+   CRM KHÁCH HÀNG  (LỖI SỐ 4: thiếu sửa/xóa, thiếu nợ & boom)
+   -------------------------------------------------------------- */
+function renderCustomerCRM() {
+    const container = document.getElementById('crm-customer-list');
+    if (!container) return;
+    if (globalOrders.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-400 italic text-center py-6">Chưa có đơn hàng nào để thống kê!</div>`;
+        return;
+    }
+
+    const map = {};
+    globalOrders.forEach(o => {
+        const phone = (o.customer_phone || '').trim();
+        if (!phone) return;
+        const c = splitCustomer(o);
+        if (!map[phone]) map[phone] = { phone, name: c.name, address: '', spent: 0, count: 0, debt: 0, debtOrders: [], boom: 0 };
+        const m = map[phone];
+        m.name = c.name || m.name;
+        if (c.address) m.address = c.address; // giữ địa chỉ mới nhất (orders đã sort mới→cũ nên lấy lần đầu là mới nhất)
+
+        if (o.status === 'boom') { m.boom += 1; return; }        // boom không tính doanh thu
+        if (o.status === 'debt') { m.debt += (o.total_amount || 0); m.debtOrders.push(o); }
+        m.spent += (o.total_amount || 0);
+        m.count += 1;
+    });
+
+    const list = Object.values(map).sort((a, b) => b.count - a.count);
+
+    container.innerHTML = list.map(c => {
+        let stars = '⭐', rank = '🥉 Khách Mới', cls = 'bg-amber-100 text-amber-900 border-amber-300';
+        if (c.count >= 10) { stars = '⭐⭐⭐⭐⭐'; rank = '💎 Siêu VIP'; cls = 'bg-purple-100 text-purple-900 border-purple-300'; }
+        else if (c.count >= 5) { stars = '⭐⭐⭐⭐'; rank = '🥇 Khách VIP'; cls = 'bg-amber-200 text-amber-950 border-amber-400'; }
+        else if (c.count >= 2) { stars = '⭐⭐'; rank = '🥈 Thân Thiết'; cls = 'bg-slate-200 text-slate-800 border-slate-300'; }
+
+        const boomWarn = c.boom > 0
+            ? `<div class="bg-rose-50 border border-rose-300 text-rose-700 font-bold text-[10px] rounded-xl p-1.5 text-center">💢 CẢNH BÁO: đã boom ${c.boom} đơn — nên thu cọc trước khi làm</div>` : '';
+
+        const debtBlock = c.debtOrders.length
+            ? `<div class="bg-amber-50 border border-amber-300 rounded-xl p-2 space-y-1">
+                 <div class="font-bold text-amber-900 text-[11px]">📝 Đang nợ: ${money(c.debt)}</div>
+                 ${c.debtOrders.map(o => `<div class="flex justify-between items-center text-[10px]">
+                     <span>Đơn #${o.id} · ${money(o.total_amount)}</span>
+                     <button onclick="collectDebt(${o.id})" class="bg-emerald-600 text-white font-bold px-2 py-1 rounded-lg">✓ Đã thu</button>
+                 </div>`).join('')}
+               </div>` : '';
+
+        const canMap = c.address && c.address.length > 3;
+        return `<div class="bg-brand-card p-3.5 rounded-2xl border ${c.boom > 0 ? 'border-rose-300' : 'border-[#E8D3C3]'} space-y-2 text-xs">
+            <div class="flex justify-between items-start border-b border-[#E8D3C3]/60 pb-1.5 gap-2">
+                <div class="min-w-0">
+                    <span class="font-extrabold text-brand-brown text-sm truncate block">${esc(c.name)}</span>
+                    <span class="text-[11px] text-slate-600 font-bold">📞 ${esc(c.phone)}</span>
+                </div>
+                <div class="text-right flex-shrink-0">
+                    <span class="text-[10px] px-2 py-0.5 rounded-full border ${cls}">${rank}</span>
+                    <div class="text-[10px] mt-0.5">${stars}</div>
+                </div>
+            </div>
+            ${boomWarn}
+            <div class="grid grid-cols-2 gap-2 bg-[#F9EFE4] p-2 rounded-xl text-[11px] text-center border border-[#E8D3C3]/50">
+                <div><span class="text-slate-500 block text-[10px]">Đã mua:</span><b class="text-brand-brown">${c.count} lượt</b></div>
+                <div><span class="text-slate-500 block text-[10px]">Tổng chi tiêu:</span><b class="text-emerald-700">${money(c.spent)}</b></div>
+            </div>
+            ${debtBlock}
+            <div class="text-[10px] text-slate-500"><b>📍 Địa chỉ:</b> ${esc(c.address || 'Chưa lưu địa chỉ')}</div>
+            <div class="flex gap-1.5 pt-1">
+                <a href="tel:${esc(c.phone)}" class="flex-1 bg-amber-100 text-amber-900 font-bold py-1.5 rounded-xl text-center text-[11px] border border-amber-300">📞 Gọi</a>
+                ${canMap
+                    ? `<a href="${gmapsUrl(c.address)}" target="_blank" class="flex-1 bg-emerald-100 text-emerald-900 font-bold py-1.5 rounded-xl text-center text-[11px] border border-emerald-300">🗺️ Dẫn Đường</a>`
+                    : `<span class="flex-1 bg-slate-100 text-slate-400 py-1.5 rounded-xl text-center text-[11px]">Không có địa chỉ</span>`}
+                <button onclick="openCustEditModal('${esc(c.phone)}')" class="flex-1 bg-[#F4E4D4] text-brand-brown font-bold py-1.5 rounded-xl text-[11px] border border-[#E8D3C3]">✎ Sửa/Xóa</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function openCustEditModal(phone) {
+    const orders = globalOrders.filter(o => (o.customer_phone || '').trim() === phone);
+    if (!orders.length) return;
+    const c = splitCustomer(orders[0]);
+    document.getElementById('cust-edit-phone-key').value = phone;
+    document.getElementById('cust-edit-name').value = c.name;
+    document.getElementById('cust-edit-phone').value = phone;
+    document.getElementById('cust-edit-addr').value = c.address;
+    document.getElementById('cust-edit-modal').classList.remove('hidden');
+}
+function closeCustEditModal() { document.getElementById('cust-edit-modal').classList.add('hidden'); }
+
+async function saveCustomerEdit() {
+    const oldPhone = document.getElementById('cust-edit-phone-key').value;
+    const name = document.getElementById('cust-edit-name').value.trim();
+    const phone = document.getElementById('cust-edit-phone').value.trim();
+    const addr = document.getElementById('cust-edit-addr').value.trim();
+    if (!name || !phone) return alert("Tên và SĐT không được để trống!");
+
+    const orders = globalOrders.filter(o => (o.customer_phone || '').trim() === oldPhone);
+    for (const o of orders) {
+        // Vẫn ghi kèm chuỗi gộp cho tương thích ngược với dữ liệu cũ,
+        // đồng thời thử ghi cột customer_address nếu bảng có.
+        const payload = {
+            customer_name: addr ? `${name} - Địa chỉ: ${addr}` : name,
+            customer_phone: phone,
+            customer_address: addr
+        };
+        const res = await safeWrite('orders', 'update', payload, o.id);
+        if (res.error) return alert("❌ Lỗi cập nhật đơn #" + o.id + ": " + res.error.message);
+    }
+    closeCustEditModal();
+    await loadAdminOrders();
+    renderCustomerCRM();
+    alert("✅ Đã cập nhật thông tin khách trên tất cả đơn!");
+}
+
+async function deleteCustomer() {
+    const phone = document.getElementById('cust-edit-phone-key').value;
+    const orders = globalOrders.filter(o => (o.customer_phone || '').trim() === phone);
+    if (!orders.length) return;
+    if (!confirm(`Xóa vĩnh viễn khách ${phone} cùng ${orders.length} đơn hàng liên quan?\nDữ liệu doanh thu của các đơn này cũng mất theo.`)) return;
+
+    const ids = orders.map(o => o.id);
+    // Xóa order_items trước rồi mới xóa orders, tránh vướng khóa ngoại.
+    const d1 = await supabaseClient.from('order_items').delete().in('order_id', ids);
+    if (d1.error) console.warn('order_items:', d1.error.message);
+    const d2 = await supabaseClient.from('orders').delete().in('id', ids);
+    if (d2.error) return alert("❌ Không xóa được: " + d2.error.message);
+
+    closeCustEditModal();
+    await loadAdminOrders();
+    renderCustomerCRM();
+    alert("🗑️ Đã xóa khách và toàn bộ đơn của khách này!");
+}
+
+/* --------------------------------------------------------------
+   ĐĂNG NHẬP BẾP / ĐẶT HÀNG
+   -------------------------------------------------------------- */
+function triggerAdminAuth() {
+    if (isAdminAuthenticated) return switchMode('admin');
+    document.getElementById('pin-input').value = '';
+    document.getElementById('pin-modal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('pin-input').focus(), 100);
+}
+function closePinModal() { document.getElementById('pin-modal').classList.add('hidden'); }
+
+function verifyPin() {
+    const input = document.getElementById('pin-input').value.trim();
+    const saved = localStorage.getItem('tiu_sp_pin') || '1234';
+    if (input === saved) {
+        isAdminAuthenticated = true;
+        closePinModal();
+        switchMode('admin');
+        switchAdminTab('flow-1'); // vào là thấy ngay đơn mới, không phải mò tab
+    } else alert("❌ Mã PIN không chính xác!");
+}
+
+function lockKitchen() {
+    isAdminAuthenticated = false;
+    switchMode('user');
+    alert("🔒 Đã khóa Bếp. Cần nhập PIN để vào lại.");
+}
+
+function switchMode(mode) {
+    document.getElementById('view-user').classList.toggle('hidden', mode !== 'user');
+    document.getElementById('view-admin').classList.toggle('hidden', mode !== 'admin');
+    document.getElementById('btn-mode-user').className = mode === 'user'
+        ? "px-2.5 py-1.5 rounded-lg bg-brand-brown text-white font-bold" : "px-2.5 py-1.5 rounded-lg text-brand-brown";
+    document.getElementById('btn-mode-admin').className = mode === 'admin'
+        ? "px-2.5 py-1.5 rounded-lg bg-brand-brown text-white font-bold" : "px-2.5 py-1.5 rounded-lg text-brand-brown";
+    if (mode === 'admin') loadAdminOrders();
+}
+
+function openCheckoutModal() {
+    if (cart.length === 0) return alert("Vui lòng chọn bánh trước khi đặt!");
+    const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    document.getElementById('checkout-total-price').innerText = money(total);
+    document.getElementById('checkout-modal').classList.remove('hidden');
+}
+function closeCheckoutModal() { document.getElementById('checkout-modal').classList.add('hidden'); }
+
+async function confirmSubmitOrder() {
+    const name = document.getElementById('cust-name').value.trim();
+    const phone = document.getElementById('cust-phone').value.trim();
+    const addr = document.getElementById('cust-note').value.trim();
+    if (!name || !phone || !addr) return alert("Vui lòng điền đủ Tên, SĐT và Địa chỉ!");
+
+    const btn = document.getElementById('btn-submit-order');
+    btn.disabled = true; btn.innerText = 'Đang gửi...'; // chống bấm 2 lần tạo đơn trùng
+
+    const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    const payload = {
+        customer_name: `${name} - Địa chỉ: ${addr}`, // giữ tương thích dữ liệu cũ
+        customer_address: addr,                      // cột mới, tự bỏ qua nếu bảng chưa có
+        customer_phone: phone,
+        status: 'pending',
+        total_amount: total
+    };
+
+    const res = await safeWrite('orders', 'insert', payload);
+    if (res.error) {
+        btn.disabled = false; btn.innerText = '✓ Xác Nhận Đặt Bánh';
+        return alert("❌ Lỗi gửi đơn: " + res.error.message);
+    }
+
+    const items = cart.map(i => ({ order_id: res.data.id, recipe_id: i.recipeId, quantity: i.qty, price: i.price }));
+    const ins = await supabaseClient.from('order_items').insert(items);
+    if (ins.error) alert("⚠️ Đơn đã gửi nhưng lỗi lưu chi tiết món: " + ins.error.message + "\nVui lòng gọi tiệm xác nhận lại.");
+    else alert("🎉 Đã gửi đơn thành công! Tiệm Bánh Ti Ù sẽ liên hệ ngay.");
+
+    cart = [];
+    renderCartUI();
+    closeCheckoutModal();
+    btn.disabled = false; btn.innerText = '✓ Xác Nhận Đặt Bánh';
+    document.getElementById('cust-name').value = '';
+    document.getElementById('cust-phone').value = '';
+    document.getElementById('cust-note').value = '';
+}
+</script>
 </body>
 </html>
