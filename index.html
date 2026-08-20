@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tiệm Bánh Ti Ù - ERP v7.0</title>
+    <title>Tiệm Bánh Ti Ù - ERP v7.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -299,7 +299,21 @@
                 <label class="font-bold text-brand-brown block mb-1">Địa chỉ giao hàng</label>
                 <textarea id="cust-edit-addr" rows="2" class="inp"></textarea>
             </div>
-            <p class="text-[10px] text-slate-500 italic">Sửa ở đây sẽ cập nhật cho <b>tất cả đơn hàng</b> của số điện thoại này.</p>
+            <div class="bg-[#F9EFE4] p-3 rounded-xl border border-[#E8D3C3] space-y-2">
+                <div>
+                    <label class="font-bold text-brand-brown block mb-1">🗒️ Ghi chú riêng về khách</label>
+                    <textarea id="cust-edit-note" rows="2" placeholder="VD: khách kỹ tính, giao trước 8h, hay đổi ý phút chót..." class="inp"></textarea>
+                </div>
+                <div>
+                    <label class="font-bold text-brand-brown block mb-1">📝 Tiền nợ ghi tay (VNĐ)</label>
+                    <input id="cust-edit-debt" type="number" inputmode="numeric" placeholder="0" class="inp">
+                    <p class="text-[10px] text-slate-500 mt-1">Khoản nợ cũ chưa gắn với đơn nào trên app. Nợ theo đơn thì bấm "📝 Ghi Nợ" ở tab Giao Hàng.</p>
+                </div>
+                <label class="flex items-center gap-2 font-bold text-rose-700">
+                    <input id="cust-edit-boom" type="checkbox" class="w-4 h-4"> 💢 Đánh dấu khách hay boom hàng
+                </label>
+            </div>
+            <p class="text-[10px] text-slate-500 italic">Tên/SĐT/địa chỉ sẽ cập nhật cho <b>tất cả đơn</b> của số này.</p>
         </div>
         <div class="flex space-x-2">
             <button onclick="deleteCustomer()" class="w-1/3 bg-rose-100 text-rose-700 font-bold py-3 rounded-xl text-xs border border-rose-200">
@@ -489,7 +503,7 @@
                 <div class="bg-amber-50 p-4 rounded-2xl border border-amber-300 space-y-2 text-xs">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-brand-brown"><i class="fa-solid fa-arrows-rotate text-amber-700 mr-1"></i> Phiên bản:</span>
-                        <span class="bg-amber-200 text-amber-900 font-extrabold px-2 py-0.5 rounded-full text-[10px]">v7.0</span>
+                        <span class="bg-amber-200 text-amber-900 font-extrabold px-2 py-0.5 rounded-full text-[10px]">v7.1</span>
                     </div>
                     <button onclick="triggerSoftwareUpdate()" class="w-full bg-amber-700 text-white font-bold py-2.5 rounded-xl">🔄 Xóa Cache & Tải Bản Mới</button>
                 </div>
@@ -500,7 +514,7 @@
 
 <script>
 /* ==========================================================================
-   TIỆM BÁNH TI Ù - ERP v7.0
+   TIỆM BÁNH TI Ù - ERP v7.1
    Toàn bộ comment tiếng Việt, giải thích "tại sao" chứ không chỉ "làm gì".
    ========================================================================== */
 
@@ -563,20 +577,38 @@ function gmapsUrl(addr) {
    tại của anh, mà khi anh thêm cột mới cũng tự dùng luôn, không cần sửa code. */
 async function safeWrite(table, mode, payload, matchId) {
     let p = Object.assign({}, payload);
+    const dropped = []; // ghi lại cột nào bảng chưa có, để chuyển sang lưu tạm trong máy
     for (let i = 0; i < 8; i++) {
+        // Nếu mọi cột đều bị bỏ thì không còn gì để ghi lên cloud nữa
+        if (Object.keys(p).length === 0) return { dropped: dropped };
+
         let res;
         if (mode === 'insert') res = await supabaseClient.from(table).insert(p).select().single();
         else res = await supabaseClient.from(table).update(p).eq('id', matchId).select();
-        if (!res.error) return { data: res.data };
+        if (!res.error) return { data: res.data, dropped: dropped };
 
         const msg = res.error.message || '';
         const m = msg.match(/'([a-zA-Z0-9_]+)' column/) || msg.match(/column "([a-zA-Z0-9_]+)"/);
         const col = m ? m[1] : null;
-        if (col && Object.prototype.hasOwnProperty.call(p, col)) { delete p[col]; continue; }
-        return { error: res.error };
+        if (col && Object.prototype.hasOwnProperty.call(p, col)) { delete p[col]; dropped.push(col); continue; }
+        return { error: res.error, dropped: dropped };
     }
-    return { error: { message: 'Ghi dữ liệu thất bại sau nhiều lần thử.' } };
+    return { error: { message: 'Ghi dữ liệu thất bại sau nhiều lần thử.' }, dropped: dropped };
 }
+
+/* Bộ nhớ tạm trong máy (localStorage).
+   Dùng cho những dữ liệu mà bảng Supabase hiện chưa có cột tương ứng:
+   trạng thái ưu tiên của vật tư, ghi chú nợ/boom của khách, giờ dự kiến ra lò.
+   App luôn THỬ ghi lên cloud trước; chỉ khi bảng thiếu cột mới lưu tại máy.
+   Nhược điểm của lưu tại máy: điện thoại khác sẽ không thấy -> muốn dùng chung
+   thì chạy mấy câu ALTER TABLE ghi ở cuối phần hướng dẫn. */
+const LS = {
+    get(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
+};
+let ingStatusLocal = LS.get('tiu_ing_status', {}); // { id: 'auto'|'red'|'yellow'|'black' }
+let custMetaLocal  = LS.get('tiu_cust_meta', {});  // { sdt: {note, boom, debt} }
+let etaLocal       = LS.get('tiu_eta', {});        // { orderId: '2026-08-20T17:30:00.000Z' }
 
 /* --------------------------------------------------------------
    DANH SÁCH ĐƠN VỊ TÍNH  (LỖI SỐ 2 - phần đơn vị)
@@ -946,6 +978,52 @@ async function removeMenuItemFromPublic() {
    đọc biến error, nên app đóng modal, gọi load lại và im như không có chuyện gì.
    Fix: HSD trống -> gửi null, và mọi thao tác ghi đều phải đọc error để báo.
    -------------------------------------------------------------- */
+/* ===== HỆ THỐNG ƯU TIÊN MÀU CHO KHO (v7.1) =====
+   Trạng thái do anh Huy chọn tay, lưu ở cột `status` của bảng ingredients
+   (nếu bảng chưa có cột thì tự lưu tạm trong máy):
+     auto   : để hệ thống tự quyết theo tồn kho + hạn sử dụng
+     red    : ép cảnh báo đỏ (cần mua gấp)
+     yellow : chờ nhập / hết nguồn cung, tạm ngưng dùng
+     black  : không còn dùng nữa -> dồn xuống cuối, làm mờ đi
+   Thứ tự hiển thị: ĐỎ (0) → CẬN DATE (1) → VÀNG chờ nhập (2) → bình thường (3) → ĐEN (4)
+   Lý do xếp vậy: thứ cần xử lý gấp nhất luôn nằm trong tầm mắt đầu tiên,
+   thứ đã bỏ dùng thì đẩy khuất xuống đáy nhưng không xóa mất dữ liệu lịch sử. */
+
+function getIngStatus(ing) {
+    // Ưu tiên giá trị trên cloud, sau đó tới bộ nhớ máy, mặc định là auto
+    return ing.status || ingStatusLocal[ing.id] || 'auto';
+}
+
+function daysLeft(expiry) {
+    if (!expiry) return null;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const exp = new Date(expiry); exp.setHours(0, 0, 0, 0);
+    return Math.ceil((exp - today) / 86400000);
+}
+
+function ingPriority(ing) {
+    const st = getIngStatus(ing);
+    if (st === 'black') return 4;
+    if (st === 'red') return 0;
+    if (st === 'yellow') return 2;
+    // Chế độ auto: tự suy ra từ số liệu thật
+    const qty = Number(ing.stock_qty) || 0;
+    const d = daysLeft(ing.expiry_date);
+    if (qty <= 0) return 0;             // hết hàng -> đỏ
+    if (d !== null && d < 0) return 0;  // quá hạn  -> đỏ
+    if (d !== null && d <= 7) return 1; // cận date -> cam
+    return 3;
+}
+
+// Bảng quy đổi mức ưu tiên ra kiểu viền + nhãn, gom một chỗ cho dễ chỉnh sau này
+function priorityStyle(p) {
+    if (p === 0) return { cls: 'border-2 border-rose-500 bg-rose-50/70', label: '<span class="bg-rose-500 text-white font-bold text-[9px] px-1.5 py-0.5 rounded-md">🔴 XỬ LÝ GẤP</span>', dim: '' };
+    if (p === 1) return { cls: 'border-2 border-amber-400 bg-amber-50/60', label: '<span class="bg-amber-400 text-amber-950 font-bold text-[9px] px-1.5 py-0.5 rounded-md">🟠 SẮP HẾT HẠN</span>', dim: '' };
+    if (p === 2) return { cls: 'border-2 border-dashed border-amber-500 bg-amber-50/40', label: '<span class="bg-amber-100 text-amber-800 font-bold text-[9px] px-1.5 py-0.5 rounded-md border border-amber-400">🟡 CHỜ NHẬP HÀNG</span>', dim: '' };
+    if (p === 4) return { cls: 'border-2 border-slate-700 bg-slate-100', label: '<span class="bg-slate-700 text-white font-bold text-[9px] px-1.5 py-0.5 rounded-md">⚫ NGƯNG DÙNG</span>', dim: 'opacity-60' };
+    return { cls: 'border border-[#E8D3C3] bg-brand-card', label: '', dim: '' };
+}
+
 function renderAllStockTabs() {
     const map = {
         'ing-list-nl': globalIngredients.filter(i => !i.category || i.category === 'nguyen_lieu'),
@@ -960,41 +1038,89 @@ function renderAllStockTabs() {
 
 function renderStockCategory(items) {
     if (items.length === 0) return `<div class="text-xs text-slate-400 italic text-center py-4">Chưa có dữ liệu trong kho này</div>`;
-    const today = new Date(); today.setHours(0, 0, 0, 0);
 
-    return items.map(ing => {
+    // Sắp xếp: ưu tiên trước, cùng mức thì theo tên cho dễ dò
+    const sorted = items.slice().sort((a, b) => {
+        const pa = ingPriority(a), pb = ingPriority(b);
+        if (pa !== pb) return pa - pb;
+        return (a.name || '').localeCompare(b.name || '', 'vi');
+    });
+
+    const nUrgent = sorted.filter(i => ingPriority(i) === 0).length;
+    const header = nUrgent > 0
+        ? `<div class="bg-rose-500 text-white text-[11px] font-bold px-3 py-2 rounded-xl mb-1">🔔 Có ${nUrgent} món cần xử lý gấp (hết hàng / quá hạn)</div>` : '';
+
+    return header + sorted.map(ing => {
+        const p = ingPriority(ing);
+        const st = getIngStatus(ing);
+        const sty = priorityStyle(p);
         const img = ing.image_url && ing.image_url.trim() ? esc(ing.image_url) : 'logo.jpg';
         const qty = Number(ing.stock_qty) || 0;
         const unitPrice = qty > 0 ? (Number(ing.total_price) || 0) / qty : 0;
 
-        let badge = '';
-        if (ing.expiry_date) {
-            const exp = new Date(ing.expiry_date); exp.setHours(0, 0, 0, 0);
-            const d = Math.ceil((exp - today) / 86400000);
-            if (d < 0) badge = `<span class="bg-rose-100 text-rose-700 font-bold text-[9px] px-1.5 py-0.5 rounded-md border border-rose-200">🚨 Đã Hết Hạn!</span>`;
-            else if (d <= 7) badge = `<span class="bg-amber-100 text-amber-800 font-bold text-[9px] px-1.5 py-0.5 rounded-md border border-amber-300">⚠️ Cận Date (còn ${d} ngày)</span>`;
-            else badge = `<span class="text-slate-400 text-[10px]">HSD: ${esc(ing.expiry_date)}</span>`;
+        let hsd = '';
+        const d = daysLeft(ing.expiry_date);
+        if (d !== null) {
+            if (d < 0) hsd = `<span class="text-rose-600 font-bold text-[10px]">🚨 Hết hạn ${Math.abs(d)} ngày trước</span>`;
+            else if (d <= 7) hsd = `<span class="text-amber-700 font-bold text-[10px]">⚠️ Cận date (còn ${d} ngày)</span>`;
+            else hsd = `<span class="text-slate-400 text-[10px]">HSD: ${esc(ing.expiry_date)}</span>`;
         }
-        // Cảnh báo tồn kho chạm đáy để anh Huy kịp đi chợ.
-        const lowStock = qty <= 0
-            ? `<span class="bg-rose-100 text-rose-700 font-bold text-[9px] px-1.5 py-0.5 rounded-md border border-rose-200 ml-1">HẾT HÀNG</span>` : '';
+        const outOfStock = qty <= 0 ? `<span class="bg-rose-100 text-rose-700 font-bold text-[9px] px-1.5 py-0.5 rounded-md border border-rose-200 ml-1">HẾT HÀNG</span>` : '';
 
-        return `<div onclick="openAddIngModal(null, ${ing.id})" class="bg-brand-card cursor-pointer p-2.5 rounded-2xl border border-[#E8D3C3] flex items-center justify-between text-xs">
-            <div class="flex items-center space-x-3 min-w-0">
-                <div class="w-12 h-12 rounded-xl overflow-hidden border border-[#E8D3C3] bg-[#F9EFE4] flex-shrink-0">
-                    <img src="${img}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='logo.jpg';">
+        // Nút chọn chế độ. stopPropagation để bấm nút không làm bung modal sửa.
+        const btn = (code, icon, title) => {
+            const on = st === code;
+            return `<button onclick="event.stopPropagation();setIngStatus(${ing.id},'${code}')" title="${title}"
+                class="w-7 h-7 rounded-lg text-[11px] flex items-center justify-center border ${on ? 'ring-2 ring-brand-brown border-brand-brown font-bold' : 'border-[#E8D3C3] opacity-70'} bg-white">${icon}</button>`;
+        };
+
+        return `<div onclick="openAddIngModal(null, ${ing.id})" class="cursor-pointer p-2.5 rounded-2xl text-xs ${sty.cls} ${sty.dim}">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3 min-w-0">
+                    <div class="w-12 h-12 rounded-xl overflow-hidden border border-[#E8D3C3] bg-[#F9EFE4] flex-shrink-0">
+                        <img src="${img}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='logo.jpg';">
+                    </div>
+                    <div class="min-w-0">
+                        <div class="font-bold text-brand-brown truncate">${esc(ing.name)}${outOfStock}</div>
+                        <div class="text-[10px] text-slate-500">Đơn giá: ${Math.round(unitPrice).toLocaleString('vi-VN')}đ/${esc(ing.unit || '')}</div>
+                        <div class="mt-0.5">${hsd}</div>
+                    </div>
                 </div>
-                <div class="min-w-0">
-                    <div class="font-bold text-brand-brown truncate">${esc(ing.name)}${lowStock}</div>
-                    <div class="text-[10px] text-slate-500">Đơn giá: ${Math.round(unitPrice).toLocaleString('vi-VN')}đ/${esc(ing.unit || '')}</div>
-                    <div class="mt-0.5">${badge}</div>
+                <div class="text-right flex-shrink-0 pl-2">
+                    <span class="font-extrabold text-brand-brown text-sm">${qty.toLocaleString('vi-VN')} ${esc(ing.unit || '')}</span>
+                    <div class="text-[10px] text-slate-400">Tồn kho</div>
                 </div>
             </div>
-            <div class="text-right flex-shrink-0 pl-2">
-                <span class="font-extrabold text-brand-brown text-sm">${qty.toLocaleString('vi-VN')} ${esc(ing.unit || '')}</span>
-                <div class="text-[10px] text-slate-400">Tồn kho</div>
-            </div></div>`;
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-[#E8D3C3]/60">
+                <div>${sty.label || '<span class="text-[10px] text-slate-400">Bình thường</span>'}</div>
+                <div class="flex gap-1" onclick="event.stopPropagation()">
+                    ${btn('auto', 'A', 'Tự động theo tồn kho & HSD')}
+                    ${btn('red', '🔴', 'Ép cảnh báo đỏ - cần mua gấp')}
+                    ${btn('yellow', '🟡', 'Chờ nhập - hết nguồn cung')}
+                    ${btn('black', '⚫', 'Không còn dùng - dồn xuống cuối')}
+                </div>
+            </div>
+        </div>`;
     }).join('');
+}
+
+/* Đổi trạng thái ưu tiên. Thử ghi lên cloud trước; nếu bảng chưa có cột `status`
+   thì tự chuyển sang lưu trong máy để anh Huy dùng được ngay, không phải đợi sửa DB. */
+async function setIngStatus(ingId, st) {
+    const ing = globalIngredients.find(i => i.id === ingId);
+    if (!ing) return;
+
+    const res = await safeWrite('ingredients', 'update', { status: st }, ingId);
+    if (res.error) return alert("❌ Lỗi đổi trạng thái: " + res.error.message);
+
+    if (res.dropped && res.dropped.includes('status')) {
+        ingStatusLocal[ingId] = st;
+        LS.set('tiu_ing_status', ingStatusLocal);
+    } else {
+        ing.status = st; // đã ghi được lên cloud
+    }
+    // Chỉ vẽ lại danh sách kho, không tải lại toàn bộ dữ liệu cho nhanh tay
+    renderAllStockTabs();
 }
 
 function openAddIngModal(catDefault, ingId) {
@@ -1369,19 +1495,93 @@ function renderFlow2(orders) {
     }).join('');
 }
 
+/* ===== ƯỚC TÍNH THỜI GIAN RA LÒ (v7.1) =====
+   Lưu mốc giờ dự kiến vào cột `eta_at` của bảng orders; bảng chưa có cột thì
+   lưu tạm trong máy. Hiển thị đếm ngược và tự chuyển đỏ khi quá giờ, để lúc
+   khách gọi hỏi "mấy giờ có bánh" là trả lời được ngay, không phải nhẩm. */
+function getEta(o) {
+    return o.eta_at || etaLocal[o.id] || null;
+}
+
+function etaText(iso) {
+    if (!iso) return { txt: 'Chưa đặt giờ dự kiến', cls: 'text-slate-400' };
+    const t = new Date(iso);
+    const diffMin = Math.round((t - new Date()) / 60000);
+    const hhmm = t.getHours().toString().padStart(2, '0') + ':' + t.getMinutes().toString().padStart(2, '0');
+    if (diffMin < 0) return { txt: `${hhmm} · TRỄ ${Math.abs(diffMin)} phút`, cls: 'text-rose-600 font-bold' };
+    if (diffMin <= 10) return { txt: `${hhmm} · còn ${diffMin} phút`, cls: 'text-amber-700 font-bold' };
+    return { txt: `${hhmm} · còn ${diffMin} phút`, cls: 'text-blue-700 font-bold' };
+}
+
+// Nhận cả 2 kiểu nhập: số phút (45) hoặc giờ cụ thể (17:30) cho tiện tay
+function parseEtaInput(v) {
+    if (!v) return null;
+    v = String(v).trim();
+    if (/^\d{1,2}[:h]\d{1,2}$/.test(v)) {
+        const [h, m] = v.split(/[:h]/).map(Number);
+        const d = new Date();
+        d.setHours(h, m, 0, 0);
+        if (d < new Date()) d.setDate(d.getDate() + 1); // qua nửa đêm thì tính sang hôm sau
+        return d;
+    }
+    const mins = parseFloat(v);
+    if (isNaN(mins) || mins <= 0) return null;
+    return new Date(Date.now() + mins * 60000);
+}
+
+async function setOrderEta(orderId, preset) {
+    let d;
+    if (preset) d = new Date(Date.now() + preset * 60000);
+    else {
+        const v = prompt("Bánh còn bao lâu nữa xong?\n• Nhập số phút, ví dụ: 45\n• Hoặc nhập giờ cụ thể, ví dụ: 17:30");
+        if (v === null) return;
+        d = parseEtaInput(v);
+        if (!d) return alert("Không hiểu định dạng. Nhập kiểu 45 hoặc 17:30 nhé.");
+    }
+    const iso = d.toISOString();
+    const res = await safeWrite('orders', 'update', { eta_at: iso }, orderId);
+    if (res.error) return alert("❌ Lỗi lưu giờ dự kiến: " + res.error.message);
+    if (res.dropped && res.dropped.includes('eta_at')) {
+        etaLocal[orderId] = iso;
+        LS.set('tiu_eta', etaLocal);
+    } else {
+        const o = globalOrders.find(x => x.id === orderId);
+        if (o) o.eta_at = iso;
+    }
+    renderFlow3(globalOrders.filter(x => x.status === 'cooking'));
+}
+
 function renderFlow3(orders) {
     const c = document.getElementById('admin-orders-list-3');
     if (orders.length === 0) return c.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Không có đơn nào đang chế biến!</div>`;
-    c.innerHTML = orders.map(o => `
-        <div class="bg-brand-card p-3.5 rounded-2xl border border-blue-300 space-y-2 text-xs">
+    c.innerHTML = orders.map(o => {
+        const e = etaText(getEta(o));
+        return `<div class="bg-brand-card p-3.5 rounded-2xl border border-blue-300 space-y-2 text-xs">
             ${orderHeader(o, `<span class="font-bold text-blue-700 text-[10px] bg-blue-100 px-2 py-0.5 rounded-full flex-shrink-0">🔥 Đang Làm</span>`)}
             ${orderItemsHtml(o)}
+            <div class="bg-[#F9EFE4] rounded-xl p-2 border border-[#E8D3C3] space-y-1.5">
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px]">⏱ Dự kiến xong: <span class="${e.cls}">${e.txt}</span></span>
+                    <button onclick="setOrderEta(${o.id})" class="bg-brand-brown text-white font-bold px-2 py-1 rounded-lg text-[10px]">✎ Sửa giờ</button>
+                </div>
+                <div class="flex gap-1">
+                    ${[15, 30, 45, 60, 90].map(m => `<button onclick="setOrderEta(${o.id},${m})" class="flex-1 bg-white border border-[#E8D3C3] text-brand-brown font-bold py-1 rounded-lg text-[10px]">+${m}p</button>`).join('')}
+                </div>
+            </div>
             <div class="flex justify-between items-center pt-1 border-t border-[#E8D3C3]/60">
                 <span class="font-bold text-brand-brown">Tổng: ${money(o.total_amount)}</span>
                 <button onclick="updateOrderStatus(${o.id},'delivering')" class="bg-blue-700 text-white font-bold px-3 py-1.5 rounded-xl">Ra Lò → Giao</button>
             </div>
-        </div>`).join('');
+        </div>`;
+    }).join('');
 }
+
+// Đồng hồ đếm ngược tự làm mới mỗi 30 giây khi đang mở tab Tiến Hành
+setInterval(() => {
+    if (currentAdminTab === 'flow-3' && isAdminAuthenticated) {
+        renderFlow3(globalOrders.filter(x => x.status === 'cooking'));
+    }
+}, 30000);
 
 function renderFlow4(orders) {
     const c = document.getElementById('admin-orders-list-4');
@@ -1414,6 +1614,12 @@ async function updateOrderStatus(orderId, newStatus) {
     const { error } = await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
     if (error) return alert("❌ Lỗi cập nhật trạng thái: " + error.message);
     await loadAdminOrders();
+
+    // Vừa bắt tay vào làm thì hỏi luôn giờ dự kiến, khỏi phải quay lại đặt sau
+    if (newStatus === 'cooking' && !getEta(globalOrders.find(o => o.id === orderId) || {})) {
+        await setOrderEta(orderId);
+        await loadAdminOrders();
+    }
 }
 
 /* Trừ kho khi xuất nguyên liệu.
@@ -1494,7 +1700,18 @@ function renderCustomerCRM() {
         m.count += 1;
     });
 
-    const list = Object.values(map).sort((a, b) => b.count - a.count);
+    // Trộn thêm phần ghi tay: ghi chú, nợ cũ, cờ boom thủ công
+    Object.values(map).forEach(m => {
+        const meta = custMetaLocal[m.phone] || {};
+        m.note = meta.note || '';
+        m.manualDebt = Number(meta.debt) || 0;
+        m.manualBoom = !!meta.boom;
+        m.debt += m.manualDebt;
+    });
+
+    // Khách "có vấn đề" (boom hoặc đang nợ) đẩy lên đầu để không quên xử lý
+    const risk = c => (c.boom > 0 || c.manualBoom ? 2 : 0) + (c.debt > 0 ? 1 : 0);
+    const list = Object.values(map).sort((a, b) => (risk(b) - risk(a)) || (b.count - a.count));
 
     container.innerHTML = list.map(c => {
         let stars = '⭐', rank = '🥉 Khách Mới', cls = 'bg-amber-100 text-amber-900 border-amber-300';
@@ -1502,17 +1719,26 @@ function renderCustomerCRM() {
         else if (c.count >= 5) { stars = '⭐⭐⭐⭐'; rank = '🥇 Khách VIP'; cls = 'bg-amber-200 text-amber-950 border-amber-400'; }
         else if (c.count >= 2) { stars = '⭐⭐'; rank = '🥈 Thân Thiết'; cls = 'bg-slate-200 text-slate-800 border-slate-300'; }
 
-        const boomWarn = c.boom > 0
-            ? `<div class="bg-rose-50 border border-rose-300 text-rose-700 font-bold text-[10px] rounded-xl p-1.5 text-center">💢 CẢNH BÁO: đã boom ${c.boom} đơn — nên thu cọc trước khi làm</div>` : '';
+        const boomWarn = (c.boom > 0 || c.manualBoom)
+            ? `<div class="bg-rose-50 border-2 border-rose-400 text-rose-700 font-bold text-[10px] rounded-xl p-1.5 text-center">
+                 💢 CẢNH BÁO BOOM HÀNG${c.boom > 0 ? ` — đã boom ${c.boom} đơn` : ' — đánh dấu thủ công'} · nên thu cọc trước khi làm
+               </div>` : '';
 
-        const debtBlock = c.debtOrders.length
-            ? `<div class="bg-amber-50 border border-amber-300 rounded-xl p-2 space-y-1">
-                 <div class="font-bold text-amber-900 text-[11px]">📝 Đang nợ: ${money(c.debt)}</div>
+        const debtBlock = (c.debtOrders.length || c.manualDebt > 0)
+            ? `<div class="bg-amber-50 border-2 border-amber-400 rounded-xl p-2 space-y-1">
+                 <div class="font-bold text-amber-900 text-[11px]">📝 Tổng đang nợ: ${money(c.debt)}</div>
                  ${c.debtOrders.map(o => `<div class="flex justify-between items-center text-[10px]">
                      <span>Đơn #${o.id} · ${money(o.total_amount)}</span>
                      <button onclick="collectDebt(${o.id})" class="bg-emerald-600 text-white font-bold px-2 py-1 rounded-lg">✓ Đã thu</button>
                  </div>`).join('')}
+                 ${c.manualDebt > 0 ? `<div class="flex justify-between items-center text-[10px]">
+                     <span>Nợ ghi tay · ${money(c.manualDebt)}</span>
+                     <button onclick="clearManualDebt('${esc(c.phone)}')" class="bg-emerald-600 text-white font-bold px-2 py-1 rounded-lg">✓ Đã thu</button>
+                 </div>` : ''}
                </div>` : '';
+
+        const noteBlock = c.note
+            ? `<div class="bg-[#F4E4D4]/70 border border-[#E8D3C3] rounded-xl p-2 text-[10px] text-brand-brown">🗒️ ${esc(c.note)}</div>` : '';
 
         const canMap = c.address && c.address.length > 3;
         return `<div class="bg-brand-card p-3.5 rounded-2xl border ${c.boom > 0 ? 'border-rose-300' : 'border-[#E8D3C3]'} space-y-2 text-xs">
@@ -1532,13 +1758,19 @@ function renderCustomerCRM() {
                 <div><span class="text-slate-500 block text-[10px]">Tổng chi tiêu:</span><b class="text-emerald-700">${money(c.spent)}</b></div>
             </div>
             ${debtBlock}
+            ${noteBlock}
             <div class="text-[10px] text-slate-500"><b>📍 Địa chỉ:</b> ${esc(c.address || 'Chưa lưu địa chỉ')}</div>
             <div class="flex gap-1.5 pt-1">
                 <a href="tel:${esc(c.phone)}" class="flex-1 bg-amber-100 text-amber-900 font-bold py-1.5 rounded-xl text-center text-[11px] border border-amber-300">📞 Gọi</a>
                 ${canMap
                     ? `<a href="${gmapsUrl(c.address)}" target="_blank" class="flex-1 bg-emerald-100 text-emerald-900 font-bold py-1.5 rounded-xl text-center text-[11px] border border-emerald-300">🗺️ Dẫn Đường</a>`
                     : `<span class="flex-1 bg-slate-100 text-slate-400 py-1.5 rounded-xl text-center text-[11px]">Không có địa chỉ</span>`}
-                <button onclick="openCustEditModal('${esc(c.phone)}')" class="flex-1 bg-[#F4E4D4] text-brand-brown font-bold py-1.5 rounded-xl text-[11px] border border-[#E8D3C3]">✎ Sửa/Xóa</button>
+            </div>
+            <div class="flex gap-1.5">
+                <button onclick="quickNote('${esc(c.phone)}')" class="flex-1 bg-[#F4E4D4] text-brand-brown font-bold py-1.5 rounded-xl text-[11px] border border-[#E8D3C3]">🗒️ Ghi Chú</button>
+                <button onclick="quickDebt('${esc(c.phone)}')" class="flex-1 bg-amber-100 text-amber-800 font-bold py-1.5 rounded-xl text-[11px] border border-amber-300">📝 Ghi Nợ</button>
+                <button onclick="toggleBoomFlag('${esc(c.phone)}')" class="flex-1 ${c.manualBoom ? 'bg-rose-500 text-white' : 'bg-rose-100 text-rose-700'} font-bold py-1.5 rounded-xl text-[11px] border border-rose-300">💢 Boom</button>
+                <button onclick="openCustEditModal('${esc(c.phone)}')" class="flex-1 bg-slate-100 text-slate-700 font-bold py-1.5 rounded-xl text-[11px] border border-slate-300">✎ Sửa</button>
             </div>
         </div>`;
     }).join('');
@@ -1548,11 +1780,49 @@ function openCustEditModal(phone) {
     const orders = globalOrders.filter(o => (o.customer_phone || '').trim() === phone);
     if (!orders.length) return;
     const c = splitCustomer(orders[0]);
+    const meta = custMetaLocal[phone] || {};
     document.getElementById('cust-edit-phone-key').value = phone;
     document.getElementById('cust-edit-name').value = c.name;
     document.getElementById('cust-edit-phone').value = phone;
     document.getElementById('cust-edit-addr').value = c.address;
+    document.getElementById('cust-edit-note').value = meta.note || '';
+    document.getElementById('cust-edit-debt').value = meta.debt || '';
+    document.getElementById('cust-edit-boom').checked = !!meta.boom;
     document.getElementById('cust-edit-modal').classList.remove('hidden');
+}
+
+/* ---- Các nút bấm nhanh ngay trên thẻ khách ----
+   Dùng prompt/confirm cho gọn thao tác một tay khi đang bận dưới bếp. */
+function saveCustMeta(phone, patch) {
+    custMetaLocal[phone] = Object.assign({}, custMetaLocal[phone] || {}, patch);
+    LS.set('tiu_cust_meta', custMetaLocal);
+    renderCustomerCRM();
+}
+
+function quickNote(phone) {
+    const cur = (custMetaLocal[phone] || {}).note || '';
+    const v = prompt("Ghi chú về khách này:\n(để trống rồi OK là xóa ghi chú)", cur);
+    if (v === null) return; // bấm Hủy
+    saveCustMeta(phone, { note: v.trim() });
+}
+
+function quickDebt(phone) {
+    const cur = (custMetaLocal[phone] || {}).debt || 0;
+    const v = prompt("Số tiền khách còn nợ (VNĐ).\nNhập 0 để xóa nợ:", cur);
+    if (v === null) return;
+    const n = parseFloat(String(v).replace(/[^\d.-]/g, '')) || 0;
+    saveCustMeta(phone, { debt: n });
+}
+
+function toggleBoomFlag(phone) {
+    const cur = !!(custMetaLocal[phone] || {}).boom;
+    if (!confirm(cur ? "Gỡ dấu boom hàng cho khách này?" : "Đánh dấu khách này hay BOOM HÀNG?")) return;
+    saveCustMeta(phone, { boom: !cur });
+}
+
+function clearManualDebt(phone) {
+    if (!confirm("Xác nhận đã thu xong khoản nợ ghi tay này?")) return;
+    saveCustMeta(phone, { debt: 0 });
 }
 function closeCustEditModal() { document.getElementById('cust-edit-modal').classList.add('hidden'); }
 
@@ -1562,6 +1832,15 @@ async function saveCustomerEdit() {
     const phone = document.getElementById('cust-edit-phone').value.trim();
     const addr = document.getElementById('cust-edit-addr').value.trim();
     if (!name || !phone) return alert("Tên và SĐT không được để trống!");
+
+    // Lưu phần ghi chú / nợ / boom trước (theo số điện thoại MỚI nếu anh đổi số)
+    custMetaLocal[phone] = {
+        note: document.getElementById('cust-edit-note').value.trim(),
+        debt: parseFloat(document.getElementById('cust-edit-debt').value) || 0,
+        boom: document.getElementById('cust-edit-boom').checked
+    };
+    if (phone !== oldPhone) delete custMetaLocal[oldPhone];
+    LS.set('tiu_cust_meta', custMetaLocal);
 
     const orders = globalOrders.filter(o => (o.customer_phone || '').trim() === oldPhone);
     for (const o of orders) {
@@ -1594,6 +1873,8 @@ async function deleteCustomer() {
     const d2 = await supabaseClient.from('orders').delete().in('id', ids);
     if (d2.error) return alert("❌ Không xóa được: " + d2.error.message);
 
+    delete custMetaLocal[phone];               // dọn luôn ghi chú/nợ/boom kèm theo
+    LS.set('tiu_cust_meta', custMetaLocal);
     closeCustEditModal();
     await loadAdminOrders();
     renderCustomerCRM();
