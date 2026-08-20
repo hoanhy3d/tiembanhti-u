@@ -502,14 +502,22 @@
             alert("✅ Đã lưu cài đặt Bếp thành công!");
         }
 
-        function triggerSoftwareUpdate() {
-            if(confirm("Bạn có muốn làm mới bộ nhớ ứng dụng để tải phiên bản mới nhất từ Server Cloud không?")) {
+        // CODE MỚI TỰ ĐỘNG REFRESH MƯỢT MÀ:
+        async function triggerSoftwareUpdate() {
+            if(confirm("Bạn có muốn xóa bộ nhớ đệm để tải phiên bản mới nhất từ Cloud không?")) {
                 if ('caches' in window) {
-                    caches.keys().then(names => {
-                        names.forEach(name => caches.delete(name));
-                    });
+                    const names = await caches.keys();
+                    await Promise.all(names.map(name => caches.delete(name)));
                 }
-                window.location.reload(true);
+                // Xóa Service Worker cache nếu có
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                    }
+                }
+                // Tải lại trang sạch sẽ
+                window.location.href = window.location.pathname + '?v=' + Date.now();
             }
         }
 
