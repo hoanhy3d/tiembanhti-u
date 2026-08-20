@@ -4,19 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tiệm Bánh Ti Ù - Enterprise ERP v5.0</title>
-
-    <!-- ========================================================= -->
-    <!-- KHAI BÁO ICON VÀ PWA CHO ĐIỆN THOẠI (iOS & ANDROID)       -->
-    <!-- ========================================================= -->
-    <link rel="icon" type="image/jpeg" href="logo.jpg">
-    <link rel="apple-touch-icon" href="logo.jpg">
-    <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Bánh Ti Ù">
-    <meta name="theme-color" content="#63391F">
-    <!-- ========================================================= -->
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -62,7 +49,7 @@
                 </div>
                 <div>
                     <label class="font-bold text-brand-brown block mb-1">Mã PIN Quản Bếp (Bảo mật):</label>
-                    <input id="cfg-pin" type="password" value="1234" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none font-mono text-center text-sm font-bold">
+                    <input id="cfg-pin" type="password" value="1234" autocomplete="new-password" inputmode="numeric" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none font-mono text-center text-sm font-bold">
                 </div>
             </div>
             <button id="btn-save-cfg" onclick="saveConfig()" class="w-full bg-brand-brown hover:bg-[#4A2B18] text-white font-bold py-3 rounded-xl text-xs shadow-md transition-all cursor-pointer">
@@ -141,10 +128,6 @@
             <input id="ing-id-hidden" type="hidden" value="">
             <div class="space-y-3 text-xs">
                 <div>
-                    <label class="font-bold text-brand-brown block mb-1">Hạn sử dụng (HSD)</label>
-                    <input id="ing-expiry" type="date" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none">
-                </div>
-                <div>
                     <label class="font-bold text-brand-brown block mb-1">Tên nguyên liệu</label>
                     <input id="ing-name" type="text" placeholder="Ví dụ: Đường thốt nốt" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none">
                 </div>
@@ -155,24 +138,11 @@
                     </div>
                     <div>
                         <label class="font-bold text-brand-brown block mb-1">Đơn vị tính</label>
-                        <select id="ing-unit" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none text-xs">
-                            <optgroup label="Khối lượng">
-                                <option value="gam">gam (g)</option>
-                                <option value="kg">kilogam (kg)</option>
-                            </optgroup>
-                            <optgroup label="Thể tích">
-                                <option value="ml">mililit (ml)</option>
-                                <option value="lít">lít (l)</option>
-                                <option value="cc">cc / cm³</option>
-                                <option value="oz">fl oz</option>
-                            </optgroup>
-                            <optgroup label="Đơn vị đếm">
-                                <option value="cái">cái / quả</option>
-                                <option value="pc">pc (món)</option>
-                                <option value="pcs">pcs (số nhiều)</option>
-                                <option value="hộp">hộp / hũ</option>
-                                <option value="gói">gói / bao</option>
-                            </optgroup>
+                        <select id="ing-unit" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none">
+                            <option value="gam">gam (g)</option>
+                            <option value="ml">mililit (ml)</option>
+                            <option value="cái">cái / quả</option>
+                            <option value="kg">kg</option>
                         </select>
                     </div>
                 </div>
@@ -315,12 +285,15 @@
             <!-- ADMIN VIEW (QUẢN BẾP) -->
             <div id="view-admin" class="space-y-4 hidden">
                 
-                <!-- DÃY MENU 1: KHO | CÔNG THỨC | GIÁ & LỜI | CÀI ĐẶT -->
-                <div class="grid grid-cols-4 gap-1 bg-[#F4E4D4] p-1 rounded-xl text-[10px] font-bold text-center border border-[#E8D3C3]">
+                <!-- DÃY MENU 1: KHO | CÔNG THỨC | GIÁ & LỜI | CÀI ĐẶT | THÊM MÓN -->
+                <div class="grid grid-cols-5 gap-1 bg-[#F4E4D4] p-1 rounded-xl text-[10px] font-bold text-center border border-[#E8D3C3]">
                     <button id="top-tab-2" onclick="switchAdminTab('top-2')" class="py-2 rounded-lg text-brand-brown">Kho</button>
                     <button id="top-tab-3" onclick="switchAdminTab('top-3')" class="py-2 rounded-lg text-brand-brown">Công Thức</button>
                     <button id="top-tab-4" onclick="switchAdminTab('top-4')" class="py-2 rounded-lg text-brand-brown">Giá & Lời</button>
                     <button id="top-tab-5" onclick="switchAdminTab('top-5')" class="py-2 rounded-lg text-brand-brown"><i class="fa-solid fa-gear mr-0.5"></i> Cài Đặt</button>
+                    <button onclick="openAddRecipeModal()" class="py-2 rounded-lg bg-[#63391F] text-white font-bold hover:bg-[#4a2a17] transition-all shadow-xs flex items-center justify-center gap-0.5">
+                        <span>+</span> Món
+                    </button>
                 </div>
 
                 <!-- DÃY MENU 2: ĐƠN MỚI > CHUẨN BỊ > TIẾN HÀNH > GIAO HÀNG -->
@@ -502,21 +475,18 @@
             alert("✅ Đã lưu cài đặt Bếp thành công!");
         }
 
-        // CODE MỚI TỰ ĐỘNG REFRESH MƯỢT MÀ:
         async function triggerSoftwareUpdate() {
             if(confirm("Bạn có muốn xóa bộ nhớ đệm để tải phiên bản mới nhất từ Cloud không?")) {
                 if ('caches' in window) {
                     const names = await caches.keys();
                     await Promise.all(names.map(name => caches.delete(name)));
                 }
-                // Xóa Service Worker cache nếu có
                 if ('serviceWorker' in navigator) {
                     const registrations = await navigator.serviceWorker.getRegistrations();
                     for (let registration of registrations) {
                         await registration.unregister();
                     }
                 }
-                // Tải lại trang sạch sẽ
                 window.location.href = window.location.pathname + '?v=' + Date.now();
             }
         }
@@ -524,8 +494,10 @@
         function initSupabase(url, key) {
             try {
                 supabaseClient = supabase.createClient(url, key);
+                // BẮT BUỘC ÉP ẨN MODAL CONFIG VÀ HIỆN APP DÙ CÓ LỖI TẢI DỮ LIỆU
                 document.getElementById('config-modal').classList.add('hidden');
                 document.getElementById('app-container').classList.remove('hidden');
+                
                 loadDataFromCloud();
                 setupRealtimeListener();
             } catch(e) {
@@ -536,20 +508,25 @@
         async function loadDataFromCloud() {
             if(!supabaseClient) return;
 
-            const { data: ingData } = await supabaseClient.from('ingredients').select('*');
-            if(ingData) globalIngredients = ingData;
+            try {
+                const { data: ingData } = await supabaseClient.from('ingredients').select('*');
+                if(ingData) globalIngredients = ingData;
 
-            const { data: recData } = await supabaseClient.from('recipes').select('*, recipe_items(*, ingredients(*))');
-            if(recData) globalRecipes = recData;
+                const { data: recData } = await supabaseClient.from('recipes').select('*, recipe_items(*, ingredients(*))');
+                if(recData) globalRecipes = recData;
 
-            renderUserCakes();
-            ();
-            renderRecipes();
-            renderProfitList();
-            loadAdminOrders();
+                renderUserCakes();
+                renderIngredients();
+                renderRecipes();
+                renderProfitList();
+                loadAdminOrders();
+            } catch (err) {
+                console.error("Lỗi tải dữ liệu Cloud:", err);
+            }
         }
 
         function setupRealtimeListener() {
+            if(!supabaseClient) return;
             supabaseClient.channel('orders-channel')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, payload => {
                     if(isAdminAuthenticated) {
@@ -565,6 +542,7 @@
 
         function renderUserCakes() {
             const list = document.getElementById('user-cake-list');
+            if(!list) return;
             list.innerHTML = globalRecipes.map(r => {
                 const imgUrl = r.image_url && r.image_url.trim() !== '' ? r.image_url : 'logo.jpg';
                 return `
@@ -576,7 +554,7 @@
                             <h4 class="font-bold text-brand-brown text-xs">${r.name}</h4>
                         </div>
                         <div class="mt-2 flex justify-between items-center">
-                            <span class="font-extrabold text-brand-brown text-xs">${r.selling_price.toLocaleString('vi-VN')}đ</span>
+                            <span class="font-extrabold text-brand-brown text-xs">${r.selling_price ? r.selling_price.toLocaleString('vi-VN') : 0}đ</span>
                             <button onclick="addToCart(${r.id})" class="bg-brand-brown text-white w-7 h-7 rounded-lg text-xs font-bold">+</button>
                         </div>
                     </div>
@@ -932,6 +910,7 @@
         }
 
         async function loadAdminOrders() {
+            if(!supabaseClient) return;
             const { data: orders } = await supabaseClient.from('orders').select('*, order_items(*, recipes(*, recipe_items(*, ingredients(*))))').order('created_at', { ascending: false });
             if(!orders) return;
 
@@ -955,6 +934,7 @@
 
         function updateBadge(elId, count) {
             const badge = document.getElementById(elId);
+            if(!badge) return;
             if(count > 0) {
                 badge.innerText = count;
                 badge.classList.remove('hidden');
@@ -963,6 +943,7 @@
 
         function renderFlow1(orders) {
             const container = document.getElementById('admin-orders-list-1');
+            if(!container) return;
             if(orders.length === 0) {
                 container.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Không có đơn mới nào!</div>`;
                 return;
@@ -986,7 +967,7 @@
                         `).join('')}
                     </div>
                     <div class="flex justify-between items-center pt-2 border-t border-[#E8D3C3]/60 text-xs">
-                        <span class="font-bold text-brand-brown">Tổng: ${o.total_amount.toLocaleString('vi-VN')}đ</span>
+                        <span class="font-bold text-brand-brown">Tổng: ${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0}đ</span>
                         <button onclick="updateOrderStatus(${o.id}, 'prep')" class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs">
                             Xác Nhận Đơn → Chuẩn Bị
                         </button>
@@ -997,6 +978,7 @@
 
         function renderFlow2(orders) {
             const container = document.getElementById('admin-orders-list-2');
+            if(!container) return;
             if(orders.length === 0) {
                 container.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Không có đơn nào cần chuẩn bị!</div>`;
                 return;
@@ -1050,7 +1032,7 @@
                         </div>
 
                         <div class="flex justify-between items-center pt-1 border-t border-[#E8D3C3]/60 text-xs">
-                            <span class="font-bold text-brand-brown">Tổng: ${o.total_amount.toLocaleString('vi-VN')}đ</span>
+                            <span class="font-bold text-brand-brown">Tổng: ${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0}đ</span>
                             <button onclick="confirmOrderDeductAndStartCooking(${o.id})" class="${isStockEnough ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-rose-700 hover:bg-rose-800'} text-white font-bold px-3 py-1.5 rounded-xl shadow-xs">
                                 ${isStockEnough ? '✓ Đã Duyệt & Trừ Kho → Tiến Hành' : '⚠️ Vẫn Trừ Kho & Tiến Hành'}
                             </button>
@@ -1062,6 +1044,7 @@
 
         function renderFlow3(orders) {
             const container = document.getElementById('admin-orders-list-3');
+            if(!container) return;
             if(orders.length === 0) {
                 container.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Không có đơn nào đang tiến hành chế biến!</div>`;
                 return;
@@ -1087,7 +1070,7 @@
                     </div>
 
                     <div class="flex justify-between items-center pt-1 border-t border-[#E8D3C3]/60 text-xs">
-                        <span class="font-bold text-brand-brown">Tổng: ${o.total_amount.toLocaleString('vi-VN')}đ</span>
+                        <span class="font-bold text-brand-brown">Tổng: ${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0}đ</span>
                         <button onclick="updateOrderStatus(${o.id}, 'delivering')" class="bg-blue-700 hover:bg-blue-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs">
                             Bánh Mới Ra Lò → Giao Hàng
                         </button>
@@ -1098,6 +1081,7 @@
 
         function renderFlow4(orders) {
             const container = document.getElementById('admin-orders-list-4');
+            if(!container) return;
             if(orders.length === 0) {
                 container.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Chưa có đơn nào chờ giao!</div>`;
                 return;
@@ -1123,7 +1107,7 @@
                     </div>
 
                     <div class="flex justify-between items-center pt-2 border-t border-[#E8D3C3]/60 text-xs">
-                        <span class="font-bold text-brand-brown">Tổng: ${o.total_amount.toLocaleString('vi-VN')}đ</span>
+                        <span class="font-bold text-brand-brown">Tổng: ${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0}đ</span>
                         <button onclick="updateOrderStatus(${o.id}, 'completed')" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs">
                             ✓ Hoàn Thành Đơn
                         </button>
@@ -1169,31 +1153,14 @@
 
         function renderIngredients() {
             const list = document.getElementById('ing-list');
-            const today = new Date();
-    
+            if(!list) return;
             list.innerHTML = globalIngredients.map(ing => {
                 const unitPrice = ing.stock_qty > 0 ? (ing.total_price / ing.stock_qty) : 0;
-        
-                // Tính toán số ngày còn lại của HSD
-                let expiryBadge = '';
-                if (ing.expiry_date) {
-                    const expDate = new Date(ing.expiry_date);
-                    const diffTime = expDate - today;
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                    if (diffDays < 0) {
-                        expiryBadge = `<span class="bg-rose-100 text-rose-700 text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border border-rose-200 ml-2">🚫 Đã Hết Hạn</span>`;
-                    } else if (diffDays <= 7) {
-                        expiryBadge = `<span class="bg-amber-100 text-amber-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border border-amber-300 ml-2">⚠️ Cận Date (Còn ${diffDays} ngày)</span>`;
-                    }
-                }
-
                 return `
                     <div onclick="openAddIngModal(${ing.id})" class="bg-brand-card hover:bg-amber-50/50 cursor-pointer transition-all p-3 rounded-2xl border border-[#E8D3C3] flex justify-between items-center text-xs shadow-xs active:scale-[0.99]">
                         <div>
                             <div class="font-bold text-brand-brown flex items-center">
                                 ${ing.name}
-                                ${expiryBadge}
                                 <i class="fa-solid fa-pen text-[10px] text-brand-gold ml-2 opacity-70"></i>
                             </div>
                             <div class="text-[10px] text-slate-500">Đơn giá vốn: ${unitPrice.toFixed(1)}đ/${ing.unit} | HSD: ${ing.expiry_date || 'N/A'}</div>
@@ -1209,6 +1176,7 @@
 
         function renderRecipes() {
             const list = document.getElementById('recipe-list');
+            if(!list) return;
             list.innerHTML = globalRecipes.map(r => `
                 <div onclick="openAddRecipeModal(${r.id})" class="bg-[#FFFDF9] hover:bg-amber-50/50 cursor-pointer transition-all p-3.5 rounded-2xl border border-[#E8D3C3] text-xs space-y-2 shadow-xs active:scale-[0.99]">
                     <div class="flex justify-between items-center font-bold text-brand-brown border-b border-[#E8D3C3]/50 pb-1.5">
@@ -1216,7 +1184,7 @@
                             ${r.name}
                             <i class="fa-solid fa-pen text-[10px] text-brand-gold ml-2 opacity-70"></i>
                         </span>
-                        <span class="text-brand-brown font-extrabold">Giá bán: ${r.selling_price.toLocaleString('vi-VN')}đ</span>
+                        <span class="text-brand-brown font-extrabold">Giá bán: ${r.selling_price ? r.selling_price.toLocaleString('vi-VN') : 0}đ</span>
                     </div>
                     <div class="text-[10px] text-slate-600 space-y-1 bg-[#F9EFE4]/50 p-2 rounded-xl border border-[#E8D3C3]/30">
                         <span class="font-bold text-brand-brown block mb-0.5">Thành phần BOM:</span>
@@ -1234,6 +1202,7 @@
 
         function renderProfitList() {
             const list = document.getElementById('profit-list');
+            if(!list) return;
             list.innerHTML = globalRecipes.map(r => {
                 let ingCost = 0;
                 if(r.recipe_items) {
@@ -1245,7 +1214,7 @@
                     });
                 }
                 const totalCost = ingCost + (r.packaging_cost || 0) + (r.labor_cost || 0);
-                const profit = r.selling_price - totalCost;
+                const profit = (r.selling_price || 0) - totalCost;
                 const margin = r.selling_price > 0 ? ((profit / r.selling_price) * 100).toFixed(1) : 0;
 
                 return `
@@ -1262,14 +1231,6 @@
                     </div>
                 `;
             }).join('');
-            // Tự động khóa Bếp khi ẩn ứng dụng hoặc chuyển tab điện thoại
-            document.addEventListener("visibilitychange", function() {
-                if (document.hidden && isAdminAuthenticated) {
-                    isAdminAuthenticated = false; // Hủy phiên làm việc Admin
-                    switchMode('user');           // Chuyển về màn hình Khách
-                    console.log("🔒 Gian bếp đã tự động khóa để bảo mật.");
-                }
-            });
         }
     </script>
 </body>
