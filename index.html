@@ -531,7 +531,7 @@
             if(recData) globalRecipes = recData;
 
             renderUserCakes();
-            renderIngredients();
+            ();
             renderRecipes();
             renderProfitList();
             loadAdminOrders();
@@ -1157,13 +1157,31 @@
 
         function renderIngredients() {
             const list = document.getElementById('ing-list');
+            const today = new Date();
+    
             list.innerHTML = globalIngredients.map(ing => {
                 const unitPrice = ing.stock_qty > 0 ? (ing.total_price / ing.stock_qty) : 0;
+        
+                // Tính toán số ngày còn lại của HSD
+                let expiryBadge = '';
+                if (ing.expiry_date) {
+                    const expDate = new Date(ing.expiry_date);
+                    const diffTime = expDate - today;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (diffDays < 0) {
+                        expiryBadge = `<span class="bg-rose-100 text-rose-700 text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border border-rose-200 ml-2">🚫 Đã Hết Hạn</span>`;
+                    } else if (diffDays <= 7) {
+                        expiryBadge = `<span class="bg-amber-100 text-amber-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border border-amber-300 ml-2">⚠️ Cận Date (Còn ${diffDays} ngày)</span>`;
+                    }
+                }
+
                 return `
                     <div onclick="openAddIngModal(${ing.id})" class="bg-brand-card hover:bg-amber-50/50 cursor-pointer transition-all p-3 rounded-2xl border border-[#E8D3C3] flex justify-between items-center text-xs shadow-xs active:scale-[0.99]">
                         <div>
                             <div class="font-bold text-brand-brown flex items-center">
                                 ${ing.name}
+                                ${expiryBadge}
                                 <i class="fa-solid fa-pen text-[10px] text-brand-gold ml-2 opacity-70"></i>
                             </div>
                             <div class="text-[10px] text-slate-500">Đơn giá vốn: ${unitPrice.toFixed(1)}đ/${ing.unit} | HSD: ${ing.expiry_date || 'N/A'}</div>
