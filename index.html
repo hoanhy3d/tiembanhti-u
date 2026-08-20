@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tiệm Bánh Ti Ù - ERP v6.3 Active Tab & Menu Sync</title>
+    <title>Tiệm Bánh Ti Ù - ERP v6.4 Bugfix & Robust Update</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -102,7 +102,7 @@
                         <span class="text-brand-brown">Tổng đơn hàng:</span>
                         <span id="checkout-total-price" class="text-brand-brown text-base">0đ</span>
                     </div>
-                    <div id="qr-display-area" class="text-center pt-2 border-t border-[#E8D3C3]/60 hidden">
+                    <div id="qr-display-area" class="text-center pt-2 border-t border-[#E8D3C3]/60">
                         <p class="text-[11px] font-bold text-brand-brown mb-1.5"><i class="fa-solid fa-qrcode mr-1"></i>Mã QR Chuyển Khoản Ngân Hàng</p>
                         <img id="cust-qr-img" src="" alt="QR Thanh Toán" class="w-44 h-44 mx-auto rounded-xl border border-amber-300 shadow-xs object-contain bg-white">
                     </div>
@@ -273,46 +273,46 @@
                             <span class="text-brand-brown">Tổng tiền:</span>
                             <span id="cart-total-price" class="text-brand-brown text-base">0đ</span>
                         </div>
-                        <button onclick="openCheckoutModal()" class="w-full bg-brand-brown text-white font-bold py-3 rounded-xl shadow-md transition-all">
+                        <button onclick="openCheckoutModal()" class="w-full bg-brand-brown text-white font-bold py-3 rounded-xl shadow-md transition-all cursor-pointer">
                             Tiến Hành Đặt Bánh <i class="fa-solid fa-arrow-right ml-1"></i>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- ADMIN VIEW (HIGHLIGHT TAB ĐỘNG MÀU NÂU ĐẬM) -->
+            <!-- ADMIN VIEW -->
             <div id="view-admin" class="space-y-3 hidden">
                 
                 <!-- HÀNG 1: KHÁCH HÀNG | CÔNG THỨC | + MÓN | CÀI ĐẶT -->
                 <div class="grid grid-cols-4 gap-1.5 bg-[#F4E4D4] p-1.5 rounded-2xl text-xs font-bold text-center border border-[#E8D3C3]">
-                    <button id="nav-customers" onclick="switchAdminTab('customers')" class="admin-tab-btn py-2.5 rounded-xl text-brand-brown hover:bg-white/50 transition-all">Khách Hàng</button>
-                    <button id="nav-recipe" onclick="switchAdminTab('recipe')" class="admin-tab-btn py-2.5 rounded-xl text-brand-brown hover:bg-white/50 transition-all">Công Thức</button>
-                    <button id="nav-add-menu" onclick="switchAdminTab('add-menu')" class="admin-tab-btn py-2.5 rounded-xl text-brand-brown hover:bg-white/50 transition-all">+ Món</button>
-                    <button id="nav-settings" onclick="switchAdminTab('settings')" class="admin-tab-btn py-2.5 rounded-xl text-brand-brown hover:bg-white/50 transition-all"><i class="fa-solid fa-gear mr-0.5"></i> Cài Đặt</button>
+                    <button id="nav-customers" onclick="switchAdminTab('customers')" class="admin-tab-btn py-2.5 rounded-xl text-brand-brown hover:bg-white/50 transition-all cursor-pointer">Khách Hàng</button>
+                    <button id="nav-recipe" onclick="switchAdminTab('recipe')" class="admin-tab-btn py-2.5 rounded-xl text-brand-brown hover:bg-white/50 transition-all cursor-pointer">Công Thức</button>
+                    <button id="nav-add-menu" onclick="switchAdminTab('add-menu')" class="admin-tab-btn py-2.5 rounded-xl text-brand-brown hover:bg-white/50 transition-all cursor-pointer">+ Món</button>
+                    <button id="nav-settings" onclick="switchAdminTab('settings')" class="admin-tab-btn py-2.5 rounded-xl text-brand-brown hover:bg-white/50 transition-all cursor-pointer"><i class="fa-solid fa-gear mr-0.5"></i> Cài Đặt</button>
                 </div>
 
                 <!-- HÀNG 2: KHO NGUYÊN LIỆU | KHO BAO BÌ | KHO KHUÔN BÁNH -->
                 <div class="grid grid-cols-3 gap-1 bg-[#E8D3C3]/50 p-1.5 rounded-2xl text-[11px] font-bold text-center border border-[#E8D3C3]">
-                    <button id="nav-kho-nl" onclick="switchAdminTab('kho-nl')" class="admin-tab-btn py-2 rounded-xl text-brand-brown hover:bg-white/50 transition-all">Kho Nguyên Liệu</button>
-                    <button id="nav-kho-bb" onclick="switchAdminTab('kho-bb')" class="admin-tab-btn py-2 rounded-xl text-brand-brown hover:bg-white/50 transition-all">Kho Bao Bì</button>
-                    <button id="nav-kho-kb" onclick="switchAdminTab('kho-kb')" class="admin-tab-btn py-2 rounded-xl text-brand-brown hover:bg-white/50 transition-all">Kho Khuôn Bánh</button>
+                    <button id="nav-kho-nl" onclick="switchAdminTab('kho-nl')" class="admin-tab-btn py-2 rounded-xl text-brand-brown hover:bg-white/50 transition-all cursor-pointer">Kho Nguyên Liệu</button>
+                    <button id="nav-kho-bb" onclick="switchAdminTab('kho-bb')" class="admin-tab-btn py-2 rounded-xl text-brand-brown hover:bg-white/50 transition-all cursor-pointer">Kho Bao Bì</button>
+                    <button id="nav-kho-kb" onclick="switchAdminTab('kho-kb')" class="admin-tab-btn py-2 rounded-xl text-brand-brown hover:bg-white/50 transition-all cursor-pointer">Kho Khuôn Bánh</button>
                 </div>
 
                 <!-- HÀNG 3: ĐƠN MỚI > CHUẨN BỊ > TIẾN HÀNH > GIAO HÀNG -->
                 <div class="grid grid-cols-4 gap-1 bg-[#E8D3C3]/80 p-1.5 rounded-2xl text-[10px] font-bold text-center border border-[#E8D3C3]">
-                    <button id="nav-flow-1" onclick="switchAdminTab('flow-1')" class="admin-tab-btn py-2 rounded-xl text-brand-brown relative transition-all">
+                    <button id="nav-flow-1" onclick="switchAdminTab('flow-1')" class="admin-tab-btn py-2 rounded-xl text-brand-brown relative transition-all cursor-pointer">
                         Đơn Mới
                         <span id="orders-badge-1" class="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center hidden">0</span>
                     </button>
-                    <button id="nav-flow-2" onclick="switchAdminTab('flow-2')" class="admin-tab-btn py-2 rounded-xl text-brand-brown relative transition-all">
+                    <button id="nav-flow-2" onclick="switchAdminTab('flow-2')" class="admin-tab-btn py-2 rounded-xl text-brand-brown relative transition-all cursor-pointer">
                         Chuẩn Bị
                         <span id="orders-badge-2" class="absolute -top-1 -right-1 bg-amber-600 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center hidden">0</span>
                     </button>
-                    <button id="nav-flow-3" onclick="switchAdminTab('flow-3')" class="admin-tab-btn py-2 rounded-xl text-brand-brown relative transition-all">
+                    <button id="nav-flow-3" onclick="switchAdminTab('flow-3')" class="admin-tab-btn py-2 rounded-xl text-brand-brown relative transition-all cursor-pointer">
                         Tiến Hành
                         <span id="orders-badge-3" class="absolute -top-1 -right-1 bg-blue-600 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center hidden">0</span>
                     </button>
-                    <button id="nav-flow-4" onclick="switchAdminTab('flow-4')" class="admin-tab-btn py-2 rounded-xl text-brand-brown relative transition-all">
+                    <button id="nav-flow-4" onclick="switchAdminTab('flow-4')" class="admin-tab-btn py-2 rounded-xl text-brand-brown relative transition-all cursor-pointer">
                         Giao Hàng
                         <span id="orders-badge-4" class="absolute -top-1 -right-1 bg-emerald-600 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center hidden">0</span>
                     </button>
@@ -320,14 +320,14 @@
 
                 <!-- CONTENT AREAS -->
                 
-                <!-- CONTENT QUẢN LÝ DẠNG MENU BÁN HÀNG (+ MÓN TAB) -->
+                <!-- CONTENT MÓN BÁN HÀNG (+ MÓN TAB) -->
                 <div id="sec-add-menu" class="space-y-3 hidden">
                     <div class="flex justify-between items-center">
                         <div>
                             <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-utensils text-brand-gold mr-1"></i>Món Bánh Đang Bán On Menu</h3>
                             <p class="text-[10px] text-slate-500">Bật/tắt bán món cũ hoặc trưng thêm món mới cho Khách</p>
                         </div>
-                        <button onclick="openAddMenuItemModal()" class="bg-[#63391F] text-white text-xs px-3 py-1.5 rounded-xl font-bold shadow-xs border border-amber-300">+ Đăng Món Mới</button>
+                        <button onclick="openAddMenuItemModal()" class="bg-[#63391F] text-white text-xs px-3 py-1.5 rounded-xl font-bold shadow-xs border border-amber-300 cursor-pointer">+ Đăng Món Mới</button>
                     </div>
                     <div id="admin-menu-items-list" class="space-y-2.5"></div>
                 </div>
@@ -355,7 +355,7 @@
                 <div id="sec-kho-nl" class="space-y-3 hidden">
                     <div class="flex justify-between items-center">
                         <h3 class="font-bold text-brand-brown text-sm">Kho Nguyên Liệu Chế Biến</h3>
-                        <button onclick="openAddIngModal('nguyen_lieu')" class="bg-brand-brown text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-xs">+ Nhập Kho NL</button>
+                        <button onclick="openAddIngModal('nguyen_lieu')" class="bg-brand-brown text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-xs cursor-pointer">+ Nhập Kho NL</button>
                     </div>
                     <div id="ing-list-nl" class="space-y-2"></div>
                 </div>
@@ -364,7 +364,7 @@
                 <div id="sec-kho-bb" class="space-y-3 hidden">
                     <div class="flex justify-between items-center">
                         <h3 class="font-bold text-brand-brown text-sm">Kho Bao Bì & Vật Tư Đóng Gói</h3>
-                        <button onclick="openAddIngModal('bao_bi')" class="bg-brand-brown text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-xs">+ Nhập Kho Bao Bì</button>
+                        <button onclick="openAddIngModal('bao_bi')" class="bg-brand-brown text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-xs cursor-pointer">+ Nhập Kho Bao Bì</button>
                     </div>
                     <div id="ing-list-bb" class="space-y-2"></div>
                 </div>
@@ -373,7 +373,7 @@
                 <div id="sec-kho-kb" class="space-y-3 hidden">
                     <div class="flex justify-between items-center">
                         <h3 class="font-bold text-brand-brown text-sm">Kho Khuôn & Khay Nướng Bánh</h3>
-                        <button onclick="openAddIngModal('khuon_banh')" class="bg-brand-brown text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-xs">+ Nhập Khuôn Bánh</button>
+                        <button onclick="openAddIngModal('khuon_banh')" class="bg-brand-brown text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-xs cursor-pointer">+ Nhập Khuôn Bánh</button>
                     </div>
                     <div id="ing-list-kb" class="space-y-2"></div>
                 </div>
@@ -418,7 +418,7 @@
                             <label class="font-bold text-brand-brown block mb-1">Lời Cảm Ơn Hiện Cho Khách:</label>
                             <textarea id="set-thanks" rows="2" placeholder="Cảm ơn quý khách đã tin tưởng Bánh Ti Ù!" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl text-xs"></textarea>
                         </div>
-                        <button onclick="saveKitchenSettings()" class="w-full bg-brand-brown text-white font-bold py-2.5 rounded-xl shadow-md">
+                        <button onclick="saveKitchenSettings()" class="w-full bg-brand-brown text-white font-bold py-2.5 rounded-xl shadow-md cursor-pointer">
                             ✓ Cập Nhật Cài Đặt Bếp
                         </button>
                     </div>
@@ -426,10 +426,10 @@
                     <div class="bg-amber-50 p-4 rounded-2xl border border-amber-300 space-y-2 text-xs">
                         <div class="flex justify-between items-center">
                             <span class="font-bold text-brand-brown"><i class="fa-solid fa-arrows-rotate text-amber-700 mr-1"></i> Phiên Bản Phần Mềm:</span>
-                            <span class="bg-amber-200 text-amber-900 font-extrabold px-2 py-0.5 rounded-full text-[10px]">v6.3 Active Tab & Menu Sync</span>
+                            <span class="bg-amber-200 text-amber-900 font-extrabold px-2 py-0.5 rounded-full text-[10px]">v6.4 Bugfix & Robust Update</span>
                         </div>
                         <p class="text-[10px] text-slate-600">Bấm nút bên dưới để xóa bộ nhớ đệm và ép tải phiên bản tính năng mới nhất từ Server về máy.</p>
-                        <button onclick="triggerSoftwareUpdate()" class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-2.5 rounded-xl shadow-xs transition-all cursor-pointer">
+                        <button id="btn-update-sw" onclick="triggerSoftwareUpdate()" class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-2.5 rounded-xl shadow-xs transition-all cursor-pointer">
                             🔄 Kiểm Tra & Cập Nhật Phiên Bản Mới
                         </button>
                     </div>
@@ -500,20 +500,24 @@
             alert("✅ Đã lưu cài đặt Bếp thành công!");
         }
 
+        // HÀM CẬP NHẬT PHẦN MỀM ĐÃ ĐƯỢC FIX LỖI TƯƠNG TÁC
         async function triggerSoftwareUpdate() {
-            if(confirm("Bạn có muốn xóa bộ nhớ đệm để tải phiên bản v6.3 mới nhất không?")) {
+            try {
                 if ('caches' in window) {
-                    const names = await caches.keys();
-                    await Promise.all(names.map(name => caches.delete(name)));
+                    const keys = await caches.keys();
+                    await Promise.all(keys.map(k => caches.delete(k)));
                 }
                 if ('serviceWorker' in navigator) {
                     const registrations = await navigator.serviceWorker.getRegistrations();
-                    for (let registration of registrations) {
-                        await registration.unregister();
+                    for (let reg of registrations) {
+                        await reg.unregister();
                     }
                 }
-                window.location.href = window.location.pathname + '?v=' + Date.now();
+            } catch(e) {
+                console.log("Xóa cache:", e);
             }
+            alert("🚀 Đang làm mới ứng dụng...");
+            window.location.reload(true);
         }
 
         function initSupabase(url, key) {
@@ -559,11 +563,70 @@
                 })
                 .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'recipes' }, () => {
                     loadDataFromCloud();
-                    if(!isAdminAuthenticated) {
-                        alert("🔔 Tiệm Bánh Ti Ù vừa cập nhật món mới lên Menu!");
-                    }
                 })
                 .subscribe();
+        }
+
+        // HÀM QUẢN LÝ GIỎ HÀNG BỔ SUNG FIX DẤU +
+        function addToCart(recipeId) {
+            const rec = globalRecipes.find(r => r.id === recipeId);
+            if(!rec) return;
+
+            const existing = cart.find(item => item.recipeId === recipeId);
+            if(existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({
+                    recipeId: rec.id,
+                    name: rec.name,
+                    price: rec.selling_price || 0,
+                    qty: 1
+                });
+            }
+            renderCartUI();
+        }
+
+        function renderCartUI() {
+            const container = document.getElementById('cart-items-container');
+            const totalEl = document.getElementById('cart-total-price');
+            const badgeEl = document.getElementById('cart-qty-badge');
+
+            if(cart.length === 0) {
+                container.innerHTML = 'Chưa chọn bánh nào.';
+                totalEl.innerText = '0đ';
+                badgeEl.innerText = '0 món';
+                return;
+            }
+
+            let total = 0;
+            let totalQty = 0;
+
+            container.innerHTML = cart.map((item, idx) => {
+                const sum = item.price * item.qty;
+                total += sum;
+                totalQty += item.qty;
+
+                return `
+                    <div class="flex justify-between items-center bg-[#F9EFE4] p-2 rounded-xl text-xs">
+                        <span class="font-bold text-brand-brown">${item.name}</span>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateCartQty(${idx}, -1)" class="w-5 h-5 bg-amber-200 text-brand-brown font-bold rounded flex items-center justify-center">-</button>
+                            <span class="font-bold text-brand-brown">${item.qty}</span>
+                            <button onclick="updateCartQty(${idx}, 1)" class="w-5 h-5 bg-brand-brown text-white font-bold rounded flex items-center justify-center">+</button>
+                            <span class="font-bold text-brand-brown min-w-[50px] text-right">${sum.toLocaleString('vi-VN')}đ</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            totalEl.innerText = `${total.toLocaleString('vi-VN')}đ`;
+            badgeEl.innerText = `${totalQty} món`;
+        }
+
+        function updateCartQty(index, change) {
+            cart[index].qty += change;
+            if(cart[index].qty <= 0) cart.splice(index, 1);
+            renderCartUI();
         }
 
         function renderUserCakes() {
@@ -590,14 +653,13 @@
                         </div>
                         <div class="mt-2 flex justify-between items-center">
                             <span class="font-extrabold text-brand-brown text-xs">${r.selling_price ? r.selling_price.toLocaleString('vi-VN') : 0}đ</span>
-                            <button onclick="addToCart(${r.id})" class="bg-brand-brown text-white w-7 h-7 rounded-lg text-xs font-bold">+</button>
+                            <button onclick="addToCart(${r.id})" class="bg-brand-brown hover:bg-[#4A2B18] text-white w-7 h-7 rounded-lg text-xs font-bold cursor-pointer">+</button>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        // CHUYỂN TAB ADMIN & HIGHLIGHT ĐỘNG NỔI BẬT TAB ĐANG MỞ
         function switchAdminTab(targetTab) {
             const secs = ['add-menu', 'customers', 'recipe', 'kho-nl', 'kho-bb', 'kho-kb', 'flow-1', 'flow-2', 'flow-3', 'flow-4', 'settings'];
             
@@ -607,12 +669,12 @@
             });
 
             document.querySelectorAll('.admin-tab-btn').forEach(btn => {
-                btn.className = "admin-tab-btn py-2 rounded-xl text-brand-brown hover:bg-white/50 transition-all font-medium relative";
+                btn.className = "admin-tab-btn py-2 rounded-xl text-brand-brown hover:bg-white/50 transition-all font-medium relative cursor-pointer";
             });
 
             const activeBtn = document.getElementById(`nav-${targetTab}`);
             if(activeBtn) {
-                activeBtn.className = "admin-tab-btn py-2 rounded-xl bg-brand-brown text-white font-extrabold shadow-md border border-amber-300 relative scale-[1.02] transition-all";
+                activeBtn.className = "admin-tab-btn py-2 rounded-xl bg-brand-brown text-white font-extrabold shadow-md border border-amber-300 relative scale-[1.02] transition-all cursor-pointer";
             }
 
             const targetEl = document.getElementById(`sec-${targetTab}`);
@@ -622,7 +684,6 @@
             if(targetTab === 'add-menu') renderAdminMenuItems();
         }
 
-        // QUẢN LÝ TẤT CẢ MÓN BÁN HÀNG ON/OFF MENU
         function renderAdminMenuItems() {
             const container = document.getElementById('admin-menu-items-list');
             if(!container) return;
@@ -650,7 +711,7 @@
                                 </span>
                             </div>
                         </div>
-                        <button onclick="openAddMenuItemModal(${r.id})" class="bg-brand-brown text-white text-[11px] font-bold px-3 py-1.5 rounded-xl shadow-xs">
+                        <button onclick="openAddMenuItemModal(${r.id})" class="bg-brand-brown text-white text-[11px] font-bold px-3 py-1.5 rounded-xl shadow-xs cursor-pointer">
                             ⚙️ Cấu Hình
                         </button>
                     </div>
@@ -833,7 +894,7 @@
                     document.getElementById('ing-expiry').value = ing.expiry_date || '';
 
                     document.getElementById('btn-del-ing').classList.remove('hidden');
-                    document.getElementById('btn-save-ing').className = "w-2/3 bg-brand-brown text-white font-bold py-3 rounded-xl text-xs shadow-md";
+                    document.getElementById('btn-save-ing').className = "w-2/3 bg-brand-brown text-white font-bold py-3 rounded-xl text-xs shadow-md cursor-pointer";
                 }
             } else {
                 document.getElementById('ing-modal-title').innerHTML = `<i class="fa-solid fa-boxes-packing text-brand-gold mr-1.5"></i>Nhập Kho Mới`;
@@ -845,7 +906,7 @@
                 document.getElementById('ing-expiry').value = '';
 
                 document.getElementById('btn-del-ing').classList.add('hidden');
-                document.getElementById('btn-save-ing').className = "w-full bg-brand-brown text-white font-bold py-3 rounded-xl text-xs shadow-md";
+                document.getElementById('btn-save-ing').className = "w-full bg-brand-brown text-white font-bold py-3 rounded-xl text-xs shadow-md cursor-pointer";
             }
             document.getElementById('add-ing-modal').classList.remove('hidden');
         }
@@ -975,7 +1036,7 @@
                     </div>
                     <div class="flex justify-between items-center pt-2 border-t border-[#E8D3C3]/60 text-xs">
                         <span class="font-bold text-brand-brown">Tổng: ${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0}đ</span>
-                        <button onclick="updateOrderStatus(${o.id}, 'prep')" class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs">
+                        <button onclick="updateOrderStatus(${o.id}, 'prep')" class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs cursor-pointer">
                             Xác Nhận Đơn → Chuẩn Bị
                         </button>
                     </div>
@@ -1002,7 +1063,7 @@
                     </div>
                     <div class="flex justify-between items-center pt-1 border-t border-[#E8D3C3]/60 text-xs">
                         <span class="font-bold text-brand-brown">Tổng: ${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0}đ</span>
-                        <button onclick="updateOrderStatus(${o.id}, 'cooking')" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs">
+                        <button onclick="updateOrderStatus(${o.id}, 'cooking')" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs cursor-pointer">
                             ✓ Đã Duyệt Kho → Tiến Hành
                         </button>
                     </div>
@@ -1029,7 +1090,7 @@
                     </div>
                     <div class="flex justify-between items-center pt-1 border-t border-[#E8D3C3]/60 text-xs">
                         <span class="font-bold text-brand-brown">Tổng: ${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0}đ</span>
-                        <button onclick="updateOrderStatus(${o.id}, 'delivering')" class="bg-blue-700 hover:bg-blue-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs">
+                        <button onclick="updateOrderStatus(${o.id}, 'delivering')" class="bg-blue-700 hover:bg-blue-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs cursor-pointer">
                             Ra Lò → Giao Hàng
                         </button>
                     </div>
@@ -1065,7 +1126,7 @@
 
                         <div class="flex justify-between items-center pt-1 border-t border-[#E8D3C3]/60 text-xs">
                             <span class="font-bold text-brand-brown">Tổng: ${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0}đ</span>
-                            <button onclick="updateOrderStatus(${o.id}, 'completed')" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs">
+                            <button onclick="updateOrderStatus(${o.id}, 'completed')" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs cursor-pointer">
                                 ✓ Hoàn Thành
                             </button>
                         </div>
@@ -1144,10 +1205,10 @@
             await supabaseClient.from('order_items').insert(orderItems);
             alert("🎉 Đã gửi đơn thành công! Tiệm Bánh Ti Ù sẽ liên hệ giao ngay.");
             cart = [];
+            renderCartUI();
             closeCheckoutModal();
         }
 
-        // ĐỔI HIỂN THỊ CHUẨN ERP THÀNH "Giá thành"
         function renderRecipes() {
             const list = document.getElementById('recipe-list');
             if(!list) return;
