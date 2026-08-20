@@ -164,7 +164,7 @@
                         <input id="ing-price" type="number" placeholder="50000" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none">
                     </div>
                     <div>
-                        <label class="font-bold text-brand-brown block mb-1">Hạn sử dụng / Ghi chú</label>
+                        <label class="font-bold text-brand-brown block mb-1">Hạn sử dụng (HSD)</label>
                         <input id="ing-expiry" type="date" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl outline-none">
                     </div>
                 </div>
@@ -316,7 +316,7 @@
                 </div>
             </div>
 
-            <!-- ADMIN VIEW (TÁI CẤU TRÚC 3 HÀNG NAVIGATION) -->
+            <!-- ADMIN VIEW (QUẢN BẾP 3 HÀNG NAVIGATION TÁI CẤU TRÚC) -->
             <div id="view-admin" class="space-y-3 hidden">
                 
                 <!-- HÀNG 1: KHÁCH HÀNG | CÔNG THỨC | + MÓN (NỔI BẬT NÂU ĐẬM) | CÀI ĐẶT -->
@@ -418,7 +418,7 @@
                     <div id="admin-orders-list-4" class="space-y-3"></div>
                 </div>
 
-                <!-- TAB CÀI ĐẶT -->
+                <!-- TAB CÀI ĐẶT & CẬP NHẬT PHẦN MỀM -->
                 <div id="sec-settings" class="space-y-4 hidden">
                     <h3 class="font-bold text-brand-brown text-sm"><i class="fa-solid fa-sliders text-brand-gold mr-1.5"></i>Cài Đặt Cấu Hình Bếp</h3>
                     <div class="bg-brand-card p-4 rounded-2xl border border-[#E8D3C3] space-y-3 text-xs shadow-xs">
@@ -430,8 +430,23 @@
                             <label class="font-bold text-brand-brown block mb-1">URL Mã QR Thanh Toán (Link ảnh):</label>
                             <input id="set-qr" type="text" placeholder="https://... hoặc link VietQR" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl font-mono text-[11px]">
                         </div>
+                        <div>
+                            <label class="font-bold text-brand-brown block mb-1">Lời Cảm Ơn Hiện Cho Khách:</label>
+                            <textarea id="set-thanks" rows="2" placeholder="Cảm ơn quý khách đã tin tưởng Bánh Ti Ù!" class="w-full border border-[#E8D3C3] bg-white p-2.5 rounded-xl text-xs"></textarea>
+                        </div>
                         <button onclick="saveKitchenSettings()" class="w-full bg-brand-brown text-white font-bold py-2.5 rounded-xl shadow-md">
-                            ✓ Cập Nhật Cài Đặt
+                            ✓ Cập Nhật Cài Đặt Bếp
+                        </button>
+                    </div>
+
+                    <div class="bg-amber-50 p-4 rounded-2xl border border-amber-300 space-y-2 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-brand-brown"><i class="fa-solid fa-arrows-rotate text-amber-700 mr-1"></i> Phiên Bản Phần Mềm:</span>
+                            <span class="bg-amber-200 text-amber-900 font-extrabold px-2 py-0.5 rounded-full text-[10px]">v6.0 Enterprise</span>
+                        </div>
+                        <p class="text-[10px] text-slate-600">Bấm nút bên dưới để xóa bộ nhớ đệm và ép tải phiên bản tính năng mới nhất từ Server về máy.</p>
+                        <button onclick="triggerSoftwareUpdate()" class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-2.5 rounded-xl shadow-xs transition-all cursor-pointer">
+                            🔄 Kiểm Tra & Cập Nhật Phiên Bản Mới
                         </button>
                     </div>
                 </div>
@@ -454,13 +469,16 @@
             const savedKey = localStorage.getItem('tiu_sp_key') || 'sb_publishable_N4LTMGhskjGoY-EdzNk_Ag_UC3KCzPG';
             const savedPin = localStorage.getItem('tiu_sp_pin') || '1234';
             const savedQr = localStorage.getItem('tiu_sp_qr') || 'https://api.vietqr.io/image/970422-0904052347-compact.png';
+            const savedThanks = localStorage.getItem('tiu_sp_thanks') || 'Cảm ơn quý khách đã ủng hộ Tiệm Bánh Ti Ù! Chúc bạn có một ngày ngon miệng ❤️';
 
             document.getElementById('cfg-url').value = savedUrl;
             document.getElementById('cfg-key').value = savedKey;
             document.getElementById('cfg-pin').value = savedPin;
             document.getElementById('set-pin').value = savedPin;
             document.getElementById('set-qr').value = savedQr;
+            document.getElementById('set-thanks').value = savedThanks;
             document.getElementById('cust-qr-img').src = savedQr;
+            document.getElementById('cust-thanks-msg').innerText = `"${savedThanks}"`;
 
             if(savedKey && savedUrl) {
                 initSupabase(savedUrl, savedKey);
@@ -479,6 +497,39 @@
             localStorage.setItem('tiu_sp_pin', pin);
 
             initSupabase(url, key);
+        }
+
+        function saveKitchenSettings() {
+            const pin = document.getElementById('set-pin').value.trim();
+            const qr = document.getElementById('set-qr').value.trim();
+            const thanks = document.getElementById('set-thanks').value.trim();
+
+            if(!pin) return alert("Vui lòng nhập Mã PIN!");
+
+            localStorage.setItem('tiu_sp_pin', pin);
+            localStorage.setItem('tiu_sp_qr', qr);
+            localStorage.setItem('tiu_sp_thanks', thanks);
+
+            document.getElementById('cust-qr-img').src = qr;
+            document.getElementById('cust-thanks-msg').innerText = `"${thanks}"`;
+
+            alert("✅ Đã lưu cài đặt Bếp thành công!");
+        }
+
+        async function triggerSoftwareUpdate() {
+            if(confirm("Bạn có muốn xóa bộ nhớ đệm để tải phiên bản v6.0 mới nhất không?")) {
+                if ('caches' in window) {
+                    const names = await caches.keys();
+                    await Promise.all(names.map(name => caches.delete(name)));
+                }
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                    }
+                }
+                window.location.href = window.location.pathname + '?v=' + Date.now();
+            }
         }
 
         function initSupabase(url, key) {
@@ -527,7 +578,6 @@
                 .subscribe();
         }
 
-        // RENDER MENU CHO KHÁCH XEM
         function renderUserCakes() {
             const list = document.getElementById('user-cake-list');
             if(!list) return;
@@ -550,7 +600,6 @@
             }).join('');
         }
 
-        // CHUYỂN TAB ADMIN
         function switchAdminTab(targetTab) {
             const secs = ['recipe', 'kho-nl', 'kho-bb', 'kho-kb', 'flow-1', 'flow-2', 'flow-3', 'flow-4', 'settings'];
             secs.forEach(s => {
@@ -562,7 +611,6 @@
             if(targetEl) targetEl.classList.remove('hidden');
         }
 
-        // RENDER 3 KHO TÁCH BIỆT (CÓ HÌNH ẢNH)
         function renderAllStockTabs() {
             const nlList = document.getElementById('ing-list-nl');
             const bbList = document.getElementById('ing-list-bb');
@@ -577,16 +625,16 @@
             if(kbList) kbList.innerHTML = renderStockCategory(kbItems);
         }
 
+        // RENDER KHO CÓ HÌNH ẢNH VÀ BÁO NGHỆ CẬN DATE
         function renderStockCategory(items) {
             if(items.length === 0) return `<div class="text-xs text-slate-400 italic text-center py-4">Chưa có dữ liệu trong kho này</div>`;
-    
+            
             const today = new Date();
             today.setHours(0,0,0,0);
 
             return items.map(ing => {
                 const img = ing.image_url && ing.image_url.trim() !== '' ? ing.image_url : 'logo.jpg';
-        
-                // LOGIC TÍNH NGHỆ MÀU CẢNH BÁO HSD
+                
                 let expiryBadge = '';
                 if (ing.expiry_date) {
                     const expDate = new Date(ing.expiry_date);
@@ -609,9 +657,7 @@
                                 <img src="${img}" alt="${ing.name}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='logo.jpg';">
                             </div>
                             <div>
-                                <div class="font-bold text-brand-brown flex items-center gap-1">
-                                    ${ing.name}
-                                </div>
+                                <div class="font-bold text-brand-brown">${ing.name}</div>
                                 <div class="text-[10px] text-slate-500">Đơn giá: ${(ing.total_price / (ing.stock_qty||1)).toFixed(0)}đ/${ing.unit}</div>
                                 <div class="mt-0.5">${expiryBadge}</div>
                             </div>
@@ -625,7 +671,6 @@
             }).join('');
         }
 
-        // MỞ MODAL NHẬP KHO CHUYÊN BIỆT
         function openAddIngModal(catDefault = 'nguyen_lieu', ingId = null) {
             document.getElementById('ing-category').value = catDefault;
             if(ingId) {
@@ -638,6 +683,7 @@
                     document.getElementById('ing-qty').value = ing.stock_qty;
                     document.getElementById('ing-unit').value = ing.unit;
                     document.getElementById('ing-price').value = ing.total_price;
+                    document.getElementById('ing-expiry').value = ing.expiry_date || '';
                 }
             } else {
                 document.getElementById('ing-id-hidden').value = '';
@@ -645,6 +691,7 @@
                 document.getElementById('ing-image').value = '';
                 document.getElementById('ing-qty').value = '';
                 document.getElementById('ing-price').value = '';
+                document.getElementById('ing-expiry').value = '';
             }
             document.getElementById('add-ing-modal').classList.remove('hidden');
         }
@@ -661,10 +708,11 @@
             const qty = parseFloat(document.getElementById('ing-qty').value) || 0;
             const unit = document.getElementById('ing-unit').value;
             const price = parseFloat(document.getElementById('ing-price').value) || 0;
+            const expiry = document.getElementById('ing-expiry').value || '';
 
             if(!name) return alert("Vui lòng nhập tên vật tư/nguyên liệu!");
 
-            const payload = { category, name, image_url, stock_qty: qty, unit, total_price: price };
+            const payload = { category, name, image_url, stock_qty: qty, unit, total_price: price, expiry_date: expiry };
 
             if(ingId) {
                 await supabaseClient.from('ingredients').update(payload).eq('id', ingId);
@@ -676,7 +724,6 @@
             loadDataFromCloud();
         }
 
-        // MODAL ĐĂNG MÓN BÁN HÀNG (+ MÓN)
         function openAddMenuItemModal() {
             const select = document.getElementById('menu-recipe-select');
             select.innerHTML = globalRecipes.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
@@ -691,20 +738,21 @@
             const recipeId = document.getElementById('menu-recipe-select').value;
             const price = parseFloat(document.getElementById('menu-item-price').value) || 0;
             const image_url = document.getElementById('menu-item-image').value.trim();
+            const desc = document.getElementById('menu-item-desc').value.trim();
 
             if(!recipeId || price <= 0) return alert("Vui lòng chọn công thức và điền giá bán!");
 
             await supabaseClient.from('recipes').update({
                 selling_price: price,
-                image_url: image_url
+                image_url: image_url,
+                description: desc
             }).eq('id', recipeId);
 
-            alert("✅ Đã cập nhật món bánh lên Menu Khách!");
+            alert("✅ Đã đăng món bánh lên Menu Khách Hàng!");
             closeAddMenuItemModal();
             loadDataFromCloud();
         }
 
-        // RENDER ĐƠN HÀNG & GOOGLE MAPS GIAO HÀNG
         async function loadAdminOrders() {
             if(!supabaseClient) return;
             const { data: orders } = await supabaseClient.from('orders').select('*, order_items(*, recipes(*, recipe_items(*, ingredients(*))))').order('created_at', { ascending: false });
@@ -720,6 +768,87 @@
             renderFlow2(prepOrders);
             renderFlow3(cookingOrders);
             renderFlow4(deliveryOrders);
+        }
+
+        function renderFlow1(orders) {
+            const container = document.getElementById('admin-orders-list-1');
+            if(!container) return;
+            if(orders.length === 0) {
+                container.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Không có đơn mới nào!</div>`;
+                return;
+            }
+
+            container.innerHTML = orders.map(o => `
+                <div class="bg-brand-card p-3.5 rounded-2xl border border-amber-400 bg-amber-50/40 shadow-xs space-y-2 text-xs">
+                    <div class="flex justify-between items-center border-b border-[#E8D3C3]/60 pb-1.5">
+                        <div>
+                            <span class="font-bold text-brand-brown">${o.customer_name}</span>
+                            <span class="text-[10px] text-slate-500 block">📞 ${o.customer_phone}</span>
+                        </div>
+                        <span class="font-bold text-amber-800 text-[11px] bg-amber-200 px-2 py-0.5 rounded-full">⏳ Đơn Mới</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-[#E8D3C3]/60 text-xs">
+                        <span class="font-bold text-brand-brown">Tổng: ${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0}đ</span>
+                        <button onclick="updateOrderStatus(${o.id}, 'prep')" class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs">
+                            Xác Nhận Đơn → Chuẩn Bị
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderFlow2(orders) {
+            const container = document.getElementById('admin-orders-list-2');
+            if(!container) return;
+            if(orders.length === 0) {
+                container.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Không có đơn nào cần chuẩn bị!</div>`;
+                return;
+            }
+
+            container.innerHTML = orders.map(o => `
+                <div class="bg-brand-card p-3.5 rounded-2xl border border-amber-300 shadow-xs space-y-2 text-xs">
+                    <div class="flex justify-between items-center border-b border-[#E8D3C3]/60 pb-1.5">
+                        <div>
+                            <span class="font-bold text-brand-brown">${o.customer_name}</span>
+                            <span class="text-[10px] text-slate-500 block">📞 ${o.customer_phone}</span>
+                        </div>
+                        <span class="font-bold text-amber-800 text-[11px]">📋 Đang Chuẩn Bị</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-1 border-t border-[#E8D3C3]/60 text-xs">
+                        <span class="font-bold text-brand-brown">Tổng: ${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0}đ</span>
+                        <button onclick="updateOrderStatus(${o.id}, 'cooking')" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs">
+                            ✓ Đã Duyệt Kho → Tiến Hành
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderFlow3(orders) {
+            const container = document.getElementById('admin-orders-list-3');
+            if(!container) return;
+            if(orders.length === 0) {
+                container.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Không có đơn nào đang tiến hành chế biến!</div>`;
+                return;
+            }
+
+            container.innerHTML = orders.map(o => `
+                <div class="bg-brand-card p-3.5 rounded-2xl border border-blue-300 shadow-xs space-y-2 text-xs">
+                    <div class="flex justify-between items-center border-b border-[#E8D3C3]/60 pb-1.5">
+                        <div>
+                            <span class="font-bold text-brand-brown">${o.customer_name}</span>
+                            <span class="text-[10px] text-slate-500 block">📞 ${o.customer_phone}</span>
+                        </div>
+                        <span class="font-bold text-blue-700 text-[11px] bg-blue-100 px-2 py-0.5 rounded-full">🔥 Đang Chế Biến</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-1 border-t border-[#E8D3C3]/60 text-xs">
+                        <span class="font-bold text-brand-brown">Tổng: ${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0}đ</span>
+                        <button onclick="updateOrderStatus(${o.id}, 'delivering')" class="bg-blue-700 hover:bg-blue-800 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs">
+                            Ra Lò → Giao Hàng
+                        </button>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function renderFlow4(orders) {
@@ -757,6 +886,13 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        async function updateOrderStatus(orderId, newStatus) {
+            const { error } = await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
+            if(error) return alert("Lỗi cập nhật trạng thái: " + error.message);
+
+            loadDataFromCloud();
         }
 
         function triggerAdminAuth() {
