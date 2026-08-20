@@ -579,8 +579,29 @@
 
         function renderStockCategory(items) {
             if(items.length === 0) return `<div class="text-xs text-slate-400 italic text-center py-4">Chưa có dữ liệu trong kho này</div>`;
+    
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
             return items.map(ing => {
                 const img = ing.image_url && ing.image_url.trim() !== '' ? ing.image_url : 'logo.jpg';
+        
+                // LOGIC TÍNH NGHỆ MÀU CẢNH BÁO HSD
+                let expiryBadge = '';
+                if (ing.expiry_date) {
+                    const expDate = new Date(ing.expiry_date);
+                    expDate.setHours(0,0,0,0);
+                    const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+
+                    if (diffDays < 0) {
+                        expiryBadge = `<span class="bg-rose-100 text-rose-700 font-bold text-[9px] px-1.5 py-0.5 rounded-md border border-rose-200">🚨 Đã Hết Hạn!</span>`;
+                    } else if (diffDays <= 7) {
+                        expiryBadge = `<span class="bg-amber-100 text-amber-800 font-bold text-[9px] px-1.5 py-0.5 rounded-md border border-amber-300">⚠️ Cận Date (còn ${diffDays} ngày)</span>`;
+                    } else {
+                        expiryBadge = `<span class="text-slate-400 text-[10px]">HSD: ${ing.expiry_date}</span>`;
+                    }
+                }
+
                 return `
                     <div onclick="openAddIngModal(null, ${ing.id})" class="bg-brand-card hover:bg-amber-50/50 cursor-pointer transition-all p-2.5 rounded-2xl border border-[#E8D3C3] flex items-center justify-between text-xs shadow-xs">
                         <div class="flex items-center space-x-3">
@@ -588,8 +609,11 @@
                                 <img src="${img}" alt="${ing.name}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='logo.jpg';">
                             </div>
                             <div>
-                                <div class="font-bold text-brand-brown">${ing.name}</div>
+                                <div class="font-bold text-brand-brown flex items-center gap-1">
+                                    ${ing.name}
+                                </div>
                                 <div class="text-[10px] text-slate-500">Đơn giá: ${(ing.total_price / (ing.stock_qty||1)).toFixed(0)}đ/${ing.unit}</div>
+                                <div class="mt-0.5">${expiryBadge}</div>
                             </div>
                         </div>
                         <div class="text-right">
